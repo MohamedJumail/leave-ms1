@@ -1,0 +1,88 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Poppins', sans-serif;
+  background-color: #121212; /* Dark background */
+  color: #e1e1e1; /* Light text */
+  margin: 0;
+  overflow-x: hidden;
+}
+
+.login-page {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-color: #121212; /* Same dark background */
+}
+
+.login-container {
+  background-color: #1c1c1c; /* Darker container for contrast */
+  padding: 40px 60px;
+  border-radius: 10px;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.login-title {
+  font-size: 32px;
+  font-weight: 600;
+  margin-bottom: 30px;
+  text-align: center;
+  color: #1DA1F2; /* Twitter blue */
+}
+
+.input-field {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 20px;
+  background-color: #333333; /* Dark input background */
+  border: 1px solid #444444; /* Subtle border */
+  color: #e1e1e1;
+  border-radius: 5px;
+  font-size: 16px;
+  transition: border-color 0.3s ease;
+}
+
+.input-field::placeholder {
+  color: #888888;
+}
+
+.input-field:focus {
+  outline: none;
+  border-color: #1DA1F2; /* Highlight with blue on focus */
+}
+
+.login-btn {
+  width: 100%;
+  padding: 12px;
+  background-color: #1DA1F2; /* Twitter blue for the button */
+  color: #ffffff;
+  font-size: 18px;
+  font-weight: 600;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.login-btn:hover {
+  background-color: #1991db; /* Darker blue when hovered */
+}
+
+.error-message {
+  margin-top: 20px;
+  color: #ff4d4d; /* Red color for errors */
+  text-align: center;
+  font-size: 14px;
+}
+

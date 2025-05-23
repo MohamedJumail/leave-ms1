@@ -1,0 +1,123 @@
+.add-holiday-container {
+    padding: 2rem;
+    background-color: #121212;
+    color: #ffffff;
+    min-height: 100vh;
+  }
+  
+  .add-holiday-card {
+    background-color: #1e1e1e;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(29, 161, 242, 0.3); /* Twitter Blue shadow */
+    margin-bottom: 2rem;
+  }
+  
+  .add-holiday-form-group {
+    margin-bottom: 1rem;
+  }
+  
+  .add-holiday-label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: bold;
+  }
+  
+  .add-holiday-input {
+    width: 100%;
+    padding: 0.5rem;
+    border-radius: 8px;
+    border: 1px solid #1DA1F2;
+    background-color: #1a1a1a;
+    color: #fff;
+  }
+  
+  .add-holiday-input:focus {
+    outline: none;
+    border-color: #1DA1F2;
+    box-shadow: 0 0 5px #1DA1F2;
+  }
+  
+  .add-holiday-submit-btn {
+    background-color: #1DA1F2;
+    color: #fff;
+    padding: 0.6rem 1.2rem;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+  }
+  
+  .add-holiday-submit-btn:hover {
+    background-color: #1991db;
+  }
+  
+  .add-holiday-error-text {
+    color: #ff4c4c;
+    margin-top: 0.5rem;
+  }
+  
+  .holiday-list-section {
+    background-color: #1e1e1e;
+    padding: 2rem;
+    border-radius: 12px;
+  }
+  
+  .add-holiday-search {
+    width: 100%;
+    padding: 0.6rem 1rem;
+    border-radius: 10px;
+    border: 1px solid #1DA1F2;
+    background-color: #1a1a1a;
+    color: #fff;
+    margin-top: 1.6rem;
+    margin-bottom: 1.5rem;
+    font-size: 1rem;
+    transition: border 0.3s ease, box-shadow 0.3s ease;
+  }
+  
+  .add-holiday-search:focus {
+    outline: none;
+    border-color: #1DA1F2;
+    box-shadow: 0 0 6px #1DA1F2;
+    
+  }
+  
+  .add-holiday-table {
+    width: 100%;
+    border-collapse: collapse;
+    color: #fff;
+  }
+  
+  .add-holiday-table th,
+  .add-holiday-table td {
+    border: 1px solid #1DA1F2;
+    padding: 0.8rem;
+    text-align: left;
+  }
+  
+  .add-holiday-table th {
+    background-color: #2b2b2b;
+  }
+  
+  .add-holiday-delete-btn {
+    background-color: #1DA1F2;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 0.4rem 0.8rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  
+  .add-holiday-delete-btn:hover {
+    background-color: #ff1a1a;
+  }
+  
+  .no-holidays {
+    text-align: center;
+    padding: 1rem;
+    color: #ccc;
+  }
+  

@@ -1,0 +1,531 @@
+/* Container */
+.leave-container {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 1.5rem 2rem;
+    background-color: #1b1b1b;
+    color: #eee;
+    border-radius: 10px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.8);
+  }
+  p{
+    margin-bottom: 1px;
+  }
+  /* Header with button aligned right */
+  .header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+  }
+  
+  /* Blue button style */
+  .yellow-btn {
+    background-color: #1DA1F2;
+    border: none;
+    border-radius: 6px;
+    color: white;
+    font-weight: 600;
+    padding: 0.6rem 1.2rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    font-size: 1rem;
+    user-select: none;
+  }
+  
+  .yellow-btn:hover,
+  .yellow-btn:focus {
+    background-color: #1784d4;
+    outline: none;
+  }
+  
+  /* Submit button distinct */
+  .submit-btn {
+    margin-top: 1rem;
+    width: 100%;
+    font-size: 1.1rem;
+  }
+  
+  /* Form styling */
+  .leave-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+  
+  .form-group {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  label {
+    margin-bottom: 0.3rem;
+    font-weight: 600;
+    color: #bbb;
+    user-select: none;
+  }
+  
+  input[type="date"],
+  select,
+  textarea {
+    padding: 0.5rem;
+    font-size: 1rem;
+    border-radius: 6px;
+    border: 1.5px solid #444;
+    background-color: #222;
+    color: #eee;
+    transition: border-color 0.3s ease;
+  }
+  
+  input[type="date"]:focus,
+  select:focus,
+  textarea:focus {
+    border-color: #1DA1F2;
+    outline: none;
+  }
+  
+  /* Leave cards */
+  .leave-card {
+    background-color: #292929;
+    border-radius: 10px;
+    padding: 1rem 1.2rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.7);
+    transition: transform 0.2s ease;
+  }
+  
+  .leave-card:hover {
+    transform: translateY(-3px);
+  }
+  
+  .leave-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.6rem;
+  }
+  
+  .leave-type {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #f0f0f0;
+  }
+  
+  /* Status badge */
+  .status-badge {
+    padding: 0.25rem 0.8rem;
+    font-weight: 700;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    user-select: none;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+  
+  .status-badge.pending {
+    background-color: #f5a623; /* amber yellow */
+    color: #4a3000;
+    box-shadow: 0 0 5px #f5a623aa;
+  }
+  
+  .status-badge.approved {
+    background-color: #27ae60; /* green */
+    color: #e9f7ef;
+    box-shadow: 0 0 6px #27ae60aa;
+  }
+  
+  .status-badge.rejected {
+    background-color: #e74c3c; /* red */
+    color: #f9e7e7;
+    box-shadow: 0 0 6px #e74c3caa;
+  }
+  
+  /* Cancel button */
+  .cancel-btn {
+    margin-top: 0.8rem;
+    background-color: #e74c3c;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 0.5rem 1.2rem;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background-color 0.3s ease;
+    align-self: flex-start;
+  }
+  
+  .cancel-btn:hover,
+  .cancel-btn:focus {
+    background-color: #c0392b;
+    outline: none;
+  }
+  
+  /* History filter buttons */
+  .history-filter-buttons {
+    margin-bottom: 1.5rem;
+    display: flex;
+    gap: 0.8rem;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  .history-filter-btn {
+    background-color: #333;
+    border: none;
+    border-radius: 20px;
+    color: #ccc;
+    padding: 0.5rem 1.1rem;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: background-color 0.25s ease, color 0.25s ease;
+    user-select: none;
+  }
+  
+  .history-filter-btn.active,
+  .history-filter-btn:hover,
+  .history-filter-btn:focus {
+    background-color: #1DA1F2;
+    color: white;
+    outline: none;
+  }
+  
+  /* Error text */
+  .error-text {
+    color: #e74c3c;
+    margin: 1rem 0;
+    font-weight: 600;
+    text-align: center;
+  }
+  
+  /* Status text for no data */
+  .status-text {
+    text-align: center;
+    color: #999;
+    font-style: italic;
+    margin-top: 2rem;
+  }
+  .leave-container {
+  max-width: 900px;
+  margin: 1rem auto;
+  padding: 0 1rem 3rem 1rem;
+  color: white;
+  background-color: #121212; /* dark background */
+  border-radius: 8px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Leave Balances Horizontal Container */
+.leave-balances-container {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+}
+
+/* Individual Leave Balance Card */
+.leave-balance-card {
+  flex: 0 0 auto;
+  background: linear-gradient(135deg, #1DA1F2 0%, #0d8ddb 100%);
+  color: white;
+  padding: 1rem 1.5rem;
+  border-radius: 8px;
+  min-width: 160px;
+  box-shadow: 0 3px 8px rgba(29, 161, 242, 0.4);
+  text-align: center;
+  cursor: default;
+  user-select: none;
+  transition: background 0.3s ease;
+}
+.leave-balance-card:hover {
+  background: linear-gradient(135deg, #0d8ddb 0%, #1DA1F2 100%);
+}
+
+.leave-balance-card h4 {
+  margin: 0 0 0.25rem 0;
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.leave-balance-card p {
+  margin: 0;
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+/* Header row */
+.header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+/* Yellow buttons */
+.yellow-btn {
+  background-color: #1DA1F2;
+  border: none;
+  color: white;
+  padding: 0.5rem 1.2rem;
+  font-weight: 600;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.25s ease;
+}
+.yellow-btn:hover,
+.yellow-btn:focus {
+  background-color: #0d8ddb;
+  outline: none;
+}
+
+/* Form styling */
+.leave-form {
+  background: #1b1b1b;
+  padding: 1rem 1.5rem;
+  border-radius: 8px;
+  margin-bottom: 2rem;
+  box-shadow: 0 2px 6px rgba(255 255 255 / 0.05);
+}
+
+.form-group {
+  margin-bottom: 1rem;
+}
+.form-group label {
+  display: block;
+  margin-bottom: 0.4rem;
+  font-weight: 600;
+}
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 0.5rem;
+  border-radius: 4px;
+  border: 1px solid #444;
+  background: #222;
+  color: white;
+  font-size: 1rem;
+}
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  border-color: #1DA1F2;
+  outline: none;
+}
+
+/* Leave cards */
+.leave-card {
+  background: #222;
+  padding: 1rem 1.5rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  box-shadow: 0 2px 8px rgba(29, 161, 242, 0.25);
+}
+.leave-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+.leave-type {
+  font-weight: 700;
+  font-size: 1.2rem;
+  color: #1DA1F2;
+}
+.status-badge {
+  padding: 0.25rem 0.7rem;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: white;
+  user-select: none;
+}
+.status-badge.pending {
+  background-color: #f0ad4e; /* amber */
+  color: black;
+}
+.status-badge.approved {
+  background-color: #28a745; /* green */
+}
+.status-badge.rejected {
+  background-color: #dc3545; /* red */
+}
+
+/* Cancel button */
+.cancel-btn {
+  margin-top: 0.75rem;
+  background-color: #dc3545;
+  border: none;
+  color: white;
+  padding: 0.5rem 1rem;
+  font-weight: 600;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.25s ease;
+}
+.cancel-btn:hover {
+  background-color: #b02a37;
+}
+
+/* History filter buttons */
+.history-filter-buttons {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+.history-filter-btn {
+  background: #444;
+  color: white;
+  border: none;
+  padding: 0.4rem 0.9rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  user-select: none;
+  transition: background-color 0.2s ease;
+}
+.history-filter-btn.active,
+.history-filter-btn:hover {
+  background-color: #1DA1F2;
+}
+
+/* Submit button */
+.submit-btn {
+  width: 100%;
+  font-size: 1.1rem;
+}
+
+/* Error and status texts */
+.error-text {
+  color: #ff6b6b;
+  font-weight: 600;
+  margin: 1rem 0;
+}
+.status-text {
+  color: #ccc;
+  font-style: italic;
+  margin: 1rem 0;
+}
+.balances-heading {
+    font-size: 1.5rem;
+    color: #ffffff;
+    margin-bottom: 0.5rem;
+  }
+  
+  .leave-balances-container {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    overflow-x: auto;
+    padding-bottom: 0.5rem;
+    scrollbar-width: thin;
+  }
+  
+  .leave-balance-card {
+    flex: 0 0 auto;
+    background: linear-gradient(135deg, #1DA1F2 0%, #0d8ddb 100%);
+    color: white;
+    padding: 1rem 1.5rem;
+    border-radius: 12px;
+    min-width: 160px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    transition: transform 0.2s ease;
+  }
+  
+  .leave-balance-card:hover {
+    transform: translateY(-5px);
+  }
+  
+  .leave-balance-card h4 {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+  }
+  
+  .leave-balance-card p {
+    margin: 0.3rem 0 0;
+    font-size: 1rem;
+    font-weight: bold;
+  }
+  .leave-card {
+    background-color: #1f1f1f;
+    color: white;
+    border: 1px solid #444;
+    border-radius: 10px;
+    padding: 16px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 6px rgba(255, 255, 255, 0.05);
+  }
+  
+  .leave-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+  
+  .leave-type {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1DA1F2; /* yellow highlight */
+    margin: 0;
+  }
+  
+  .leave-card-body p {
+    margin: 6px 0;
+    line-height: 1.6;
+    font-size: 14px;
+  }
+  
+  .cancel-btn {
+    background-color: #e74c3c;
+    color: white;
+    padding: 8px 14px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-top: 12px;
+    transition: background-color 0.2s ease;
+  }
+  
+  .cancel-btn:hover {
+    background-color: #c0392b;
+  }
+  
+  /* Badge Styles */
+  .badge-approved {
+    background-color: #2ecc71;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    color: white;
+    text-transform: capitalize;
+  }
+  
+  .badge-rejected {
+    background-color: #e74c3c;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    color: white;
+    text-transform: capitalize;
+  }
+  
+  .badge-pending {
+    background-color:#1DA1F2;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    color: white;
+    text-transform: capitalize;
+  }
+  
+  /* Optional: Differentiate history cards slightly */
+  .history-card {
+    border-left: 4px solid #1DA1F2;
+  }
+  

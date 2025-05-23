@@ -1,0 +1,278 @@
+/* Container */
+.view-users-container {
+    padding: 20px 40px;
+    background-color: #0d1117;
+    min-height: 100vh;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    color: white;
+  }
+  
+  /* Section title */
+  .user-list-section h2 {
+    color: #1da1f2;
+    margin-bottom: 20px;
+    font-weight: 700;
+    font-size: 2rem;
+  }
+  
+  /* Search input */
+  .user-search-input {
+    width: 100%;
+    max-width: 400px;
+    padding: 10px 14px;
+    margin-bottom: 30px;
+    border-radius: 6px;
+    border: 1.5px solid #30363d;
+    background-color: #161b22;
+    color: white;
+    font-size: 1rem;
+    transition: border-color 0.3s ease;
+  }
+  
+  .user-search-input::placeholder {
+    color: #8b949e;
+  }
+  
+  .user-search-input:focus {
+    outline: none;
+    border-color: #1da1f2;
+    box-shadow: 0 0 8px #1da1f2;
+  }
+  
+  /* User table */
+  .user-table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: #161b22;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 0 12px rgba(29, 161, 242, 0.5);
+  }
+  
+  .user-table thead {
+    background-color: #0f1620;
+  }
+  
+  .user-table th,
+  .user-table td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #30363d;
+    font-size: 1rem;
+  }
+  
+  .user-table th {
+    color: #1da1f2;
+    font-weight: 600;
+  }
+  
+  .user-table tbody tr:hover {
+    background-color: #21262d;
+  }
+  
+  .no-users {
+    text-align: center;
+    padding: 20px;
+    color: #8b949e;
+    font-style: italic;
+  }
+  
+  /* View Details button */
+  .btn-view-details {
+    background-color: #1da1f2;
+    border: none;
+    padding: 8px 16px;
+    color: white;
+    font-weight: 600;
+    font-size: 0.9rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.25s ease;
+  }
+  
+  .btn-view-details:hover,
+  .btn-view-details:focus {
+    background-color: #0d8ddb;
+    outline: none;
+    box-shadow: 0 0 10px #1da1f2;
+  }
+  
+  /* Modal overlay full screen with blur */
+  .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(13, 17, 23, 0.75); /* dark translucent */
+    backdrop-filter: blur(7px);
+    -webkit-backdrop-filter: blur(7px); /* Safari */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    padding: 20px;
+  }
+  
+  /* Modal container */
+  .leave-details-modal {
+    background-color: #161b22;
+    border-radius: 14px;
+    width: 90%;
+    max-width: 650px;
+    max-height: 85vh;
+    overflow-y: auto;
+    padding: 30px 35px 40px;
+    box-shadow: 0 0 25px #1da1f2aa;
+    position: relative;
+    color: white;
+  }
+  
+  /* Close button top right */
+  .btn-close-details {
+    position: absolute;
+    top: 18px;
+    right: 22px;
+    background: transparent;
+    border: none;
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: #8b949e;
+    cursor: pointer;
+    transition: color 0.25s ease;
+    line-height: 1;
+  }
+  
+  .btn-close-details:hover,
+  .btn-close-details:focus {
+    color: #1da1f2;
+    outline: none;
+  }
+  
+  /* Modal titles */
+  .panel-title {
+    margin-top: 0;
+    font-size: 1.8rem;
+    color: #1da1f2;
+    font-weight: 700;
+    margin-bottom: 25px;
+    text-align: center;
+  }
+  
+  .leave-balance-section,
+  .pending-leaves-section {
+    margin-bottom: 30px;
+  }
+  
+  /* Leave Balances table */
+  .leave-balance-table,
+  .pending-leaves-table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: #0d1117;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: inset 0 0 8px #1da1f2aa;
+  }
+  
+  .leave-balance-table th,
+  .leave-balance-table td,
+  .pending-leaves-table th,
+  .pending-leaves-table td {
+    padding: 10px 14px;
+    border-bottom: 1px solid #30363d;
+    font-size: 1rem;
+    text-align: left;
+  }
+  
+  .leave-balance-table thead,
+  .pending-leaves-table thead {
+    background-color: #161b22;
+    color: #1da1f2;
+    font-weight: 600;
+  }
+  
+  .leave-balance-table tbody tr:hover,
+  .pending-leaves-table tbody tr:hover {
+    background-color: #21262d;
+  }
+  
+  .pending-leaves-table td {
+    vertical-align: middle;
+  }
+  
+  /* Scrollbar for modal */
+  .leave-details-modal::-webkit-scrollbar {
+    width: 8px;
+  }
+  
+  .leave-details-modal::-webkit-scrollbar-thumb {
+    background: #1da1f2aa;
+    border-radius: 6px;
+  }
+  
+  .leave-details-modal::-webkit-scrollbar-track {
+    background: #0d1117;
+  }
+  
+
+ /* Container to hold buttons side-by-side */
+.button-group {
+  display: flex;
+  gap: 6px; /* space between buttons */
+  justify-content: flex-start; /* align left, change to center or flex-end if needed */
+  margin-top: 8px;
+}
+
+/* Common styles for both buttons */
+.button-group button {
+  flex: 1; /* equal width */
+  padding: 6px;
+  font-weight: 400;
+  font-size: 0.8rem;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+  color: white;
+  user-select: none;
+  margin-top: -2px;
+}
+
+/* Approve button */
+.btn-approve {
+  background-color: #28a745; /* green */
+  box-shadow: 0 0 8px rgba(40, 167, 69, 0.7);
+}
+
+.btn-approve:hover,
+.btn-approve:focus {
+  background-color: #218838;
+  box-shadow: 0 0 12px rgba(33, 136, 56, 0.8);
+  outline: none;
+}
+
+/* Reject button */
+.btn-reject {
+  background-color: #dc3545; /* red */
+  box-shadow: 0 0 8px rgba(220, 53, 69, 0.7);
+}
+
+.btn-reject:hover,
+.btn-reject:focus {
+  background-color: #c82333;
+  box-shadow: 0 0 12px rgba(200, 35, 51, 0.8);
+  outline: none;
+}
+.btn-toggle-view {
+  float: right;
+  margin-top: -35px;
+  margin-right: 10px;
+  background-color: #ffc107;
+  color: black;
+  padding: 6px 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+}

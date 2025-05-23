@@ -1,0 +1,121 @@
+.leave-types {
+    padding: 2rem;
+    background-color: #121212;
+    color: #ffffff;
+    min-height: 100vh;
+  }
+  
+  .card {
+    background-color: #1e1e1e;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(29, 161, 242, 0.3); /* Twitter Blue shadow */
+    margin-bottom: 2rem;
+  }
+  
+  .header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  .head{
+    margin-bottom: 6px;
+  }
+  .search-box {
+    width: 100%;
+    padding: 0.6rem 1rem;
+    border-radius: 10px;
+    border: 1px solid #1DA1F2;
+    background-color: #1a1a1a;
+    color: #fff;
+    font-size: 1rem;
+    transition: border 0.3s ease, box-shadow 0.3s ease;
+  }
+  
+  .search-box:focus {
+    outline: none;
+    border-color: #1DA1F2;
+    box-shadow: 0 0 6px #1DA1F2;
+  }
+  
+  .add-form {
+    display: grid;
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+  
+  .add-form label {
+    display: flex;
+    flex-direction: column;
+    font-weight: bold;
+  }
+  
+  .add-form input[type="text"],
+  .add-form input[type="number"] {
+    padding: 0.5rem;
+    border-radius: 8px;
+    border: 1px solid #1DA1F2;
+    background-color: #1a1a1a;
+    color: #fff;
+  }
+  
+  .add-form input[type="checkbox"] {
+    margin-top: -4px;
+    padding:1px;
+  }
+  
+  .add-form input:not([type="checkbox"]):focus  {
+    outline: none;
+    border-color: #1DA1F2;
+    box-shadow: 0 0 5px #1DA1F2;
+  }
+  
+  .add-form button {
+    background-color: #1DA1F2;
+    color: #fff;
+    padding: 0.6rem 1.2rem;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+  }
+  
+  .add-form button:hover {
+    background-color: #1991db;
+  }
+  
+  .leave-types-table {
+    width: 100%;
+    border-collapse: collapse;
+    color: #fff;
+  }
+  
+  .leave-types-table th,
+  .leave-types-table td {
+    border: 1px solid #1DA1F2;
+    padding: 0.8rem;
+    text-align: left;
+  }
+  
+  .leave-types-table th {
+    background-color: #2b2b2b;
+  }
+  
+  .leave-types-table tr:nth-child(even) {
+    background-color: #1a1a1a;
+  }
+  
+  .leave-types-table tr:hover {
+    background-color: #2a2a2a;
+  }
+  
+  .no-leave-types {
+    text-align: center;
+    padding: 1rem;
+    color: #ccc;
+  }
+  

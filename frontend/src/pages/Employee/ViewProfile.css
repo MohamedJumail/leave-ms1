@@ -1,0 +1,129 @@
+/* ViewProfile.css */
+
+.vp-card {
+    max-width: 480px;
+    margin: 2rem auto;
+    background-color: #121212;
+    color: #e0e0e0;
+    padding: 2rem 2.5rem;
+    border-radius: 12px;
+    box-shadow: 0 0 15px rgba(29, 161, 242, 0.4);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    user-select: none;
+  }
+  
+  .vp-title {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #1DA1F2;
+    margin-bottom: 1.2rem;
+    text-align: center;
+    letter-spacing: 1.2px;
+  }
+  
+  .vp-subtitle {
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: #1DA1F2;
+    margin-bottom: 1rem;
+    border-bottom: 2px solid #1DA1F2;
+    padding-bottom: 0.25rem;
+  }
+  
+  .vp-card p {
+    font-size: 1rem;
+    line-height: 1.5;
+    margin: 0.3rem 0;
+  }
+  
+  .vp-separator {
+    border: none;
+    height: 1px;
+    background: #1DA1F2;
+    margin: 1.8rem 0;
+    opacity: 0.25;
+  }
+  
+  .vp-button {
+    cursor: pointer;
+    background-color: #1DA1F2;
+    border: none;
+    color: #121212;
+    font-weight: 600;
+    padding: 0.6rem 1.4rem;
+    border-radius: 6px;
+    font-size: 1rem;
+    transition: background-color 0.25s ease, color 0.25s ease;
+    user-select: none;
+  }
+  
+  .vp-button:hover {
+    background-color: #0d8ddb;
+    color: #e0e0e0;
+  }
+  
+  .vp-button:active {
+    background-color: #0a6cae;
+  }
+  
+  .vp-button:disabled {
+    background-color: #555;
+    cursor: not-allowed;
+    color: #999;
+  }
+  
+  .vp-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+  }
+  
+  .vp-form-group {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .vp-label {
+    font-weight: 600;
+    margin-bottom: 0.3rem;
+    font-size: 0.9rem;
+    color: #a0a0a0;
+    user-select: text;
+  }
+  
+  .vp-input {
+    padding: 0.5rem 0.75rem;
+    font-size: 1rem;
+    border: 1.8px solid #1DA1F2;
+    border-radius: 6px;
+    background-color: #222;
+    color: #e0e0e0;
+    transition: border-color 0.25s ease;
+  }
+  
+  .vp-input:focus {
+    outline: none;
+    border-color: #0d8ddb;
+    box-shadow: 0 0 8px #1DA1F2aa;
+  }
+  
+  .vp-password-msg {
+    margin-top: 0.5rem;
+    font-size: 0.9rem;
+    color: #1DA1F2;
+    user-select: text;
+  }
+  
+  .vp-loading,
+  .vp-error {
+    max-width: 480px;
+    margin: 3rem auto;
+    text-align: center;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #1DA1F2;
+    user-select: none;
+  }
+  
+
+  

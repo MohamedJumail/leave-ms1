@@ -1,0 +1,83 @@
+/* MyCalendar.css */
+
+.calendar-container {
+    height: 600px;
+    background-color: transparent; /* Light background */
+    color: #000000;            /* Default text black */
+    padding: 10px;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Override react-big-calendar default styles if needed */
+  .rbc-calendar {
+    background-color: transparent;
+    font-family: 'Segoe UI', sans-serif;
+    border-radius: 10px;
+  }
+  
+  /* Header (Month/Week/Day toolbar) */
+  .rbc-toolbar {
+    background-color: transparent;
+    color: white;
+    padding: 10px;
+    border-radius: 10px 10px 0 0;
+    border: solid white 1px;
+  }
+  
+  /* Buttons inside toolbar */
+  .rbc-btn-group button {
+    background:#1DA1F2;
+    color: black;
+    border: 1px solid #1DA1F2;
+    font-weight: 500;
+    padding: 4px 8px;
+    border-radius: 5px;
+    margin: 0 5px;
+  }
+  
+  .rbc-btn-group button.rbc-active {
+    background-color: #1DA1F2;
+    color: darkblue;
+  }
+  
+  /* Day labels (Sun, Mon, ...) */
+  .rbc-header {
+    background-color:#1DA1F2;
+    padding: 8px;
+    border-bottom: 1px solid #ddd;
+    color: black;
+    font-weight: bold;
+  }
+  
+  /* Event box common styles */
+  .rbc-event {
+    padding: 4px 6px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    border-radius: 5px;
+    border: 1px solid transparent;
+  }
+  
+  /* Hover effect */
+  .rbc-event:hover {
+    filter: brightness(0.95);
+    cursor: pointer;
+  }
+  
+  /* Custom background for selected/active event if needed */
+  .rbc-selected {
+    outline: 2px solid #1DA1F2;
+  }
+  
+  /* Today highlight */
+  .rbc-today {
+    background-color:silver;
+    opacity: 0.3;
+  }
+  
+  /* Weekend gray background if you want it to show as faded */
+  .rbc-day-bg.rbc-off-range-bg {
+    background-color: transparent
+  }
+  
