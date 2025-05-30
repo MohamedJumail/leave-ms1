@@ -1,0 +1,210 @@
+/* src/styles/LeaveStatusModal.css */
+
+/* Modal Overlay and Card */
+.ReactModal__Overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    backdrop-filter: blur(8px);
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 999;
+}
+
+.ReactModal__Content {
+    background-color: #1e1e1e;
+    border: 1px solid #1DA1F2;
+    border-radius: 10px;
+    padding: 30px 25px;
+    max-width: 600px;
+    width: 90%;
+    box-shadow: 0 0 20px rgba(29, 161, 242, 0.3);
+    color: #ffffff;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.modal-title {
+    font-size: 24px;
+    color: #1DA1F2;
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+.modal-loading-text,
+.modal-message {
+    font-size: 16px;
+    color: #ccc;
+    text-align: center;
+}
+
+/* Status Timeline */
+.status-timeline-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid #333;
+}
+
+.status-item {
+    display: flex;
+    align-items: center;
+    position: relative;
+    padding-left: 30px; /* Space for the indicator line */
+}
+
+.status-item::before {
+    content: '';
+    position: absolute;
+    left: 10px;
+    top: 5px;
+    bottom: 5px;
+    width: 2px;
+    background-color: #555;
+}
+
+.status-item:first-child::before {
+    top: 10px;
+}
+
+.status-item:last-child::before {
+    bottom: 10px;
+}
+
+.status-icon {
+    background-color: #777;
+    color: #fff;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: absolute;
+    left: 0;
+    font-size: 0.8rem;
+}
+
+.status-details {
+    flex-grow: 1;
+    padding-left: 15px;
+}
+
+.status-role {
+    font-weight: bold;
+    color: #eee;
+    margin-bottom: 5px;
+}
+
+.status-status {
+    font-style: italic;
+    color: #bbb;
+    margin-bottom: 5px;
+}
+
+.status-reason {
+    color: #ccc;
+    font-size: 0.9rem;
+}
+
+.status-approved-at {
+    color: #999;
+    font-size: 0.8rem;
+}
+
+/* Status Icon Styling based on status */
+.status-icon.pending {
+    background-color: #ffc107;
+    color: #333;
+}
+
+.status-icon.approved {
+    background-color: #28a745;
+    color: white;
+}
+
+.status-icon.rejected,
+.status-icon.cancelled {
+    background-color: #dc3545;
+    color: white;
+}
+
+/* Modal Actions */
+.modal-actions {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    margin-top: 20px;
+}
+
+.modal-btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.modal-btn.cancel {
+    background-color: #2c2c2c;
+    color: #ccc;
+}
+
+.modal-btn.cancel:hover {
+    background-color: #444;
+    transform: translateY(-2px);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .ReactModal__Content {
+        padding: 20px 15px;
+        width: 95%;
+    }
+
+    .modal-title {
+        font-size: 22px;
+    }
+
+    .status-item {
+        padding-left: 25px;
+    }
+
+    .status-item::before {
+        left: 8px;
+    }
+
+    .status-icon {
+        width: 18px;
+        height: 18px;
+        font-size: 0.7rem;
+    }
+
+    .status-details {
+        padding-left: 10px;
+    }
+}
+
+@media (max-width: 480px) {
+    .modal-title {
+        font-size: 20px;
+    }
+
+    .status-details {
+        font-size: 0.9rem;
+    }
+
+    .modal-btn {
+        padding: 8px 15px;
+        font-size: 14px;
+    }
+}

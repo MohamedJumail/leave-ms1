@@ -528,4 +528,37 @@
   .history-card {
     border-left: 4px solid #1DA1F2;
   }
-  
+  /* Style for the "View Status" button */
+
+.view-status-btn {
+  background-color: #1DA1F2;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: background-color 0.25s ease;
+  margin-left: 0.5rem;
+}
+
+.view-status-btn:hover,
+.view-status-btn:focus {
+  background-color: #0d8ddb;
+  outline: none;
+}
+
+
+/* You might want to adjust the layout of the buttons in the card actions */
+.leave-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem; /* Space between buttons */
+  margin-top: 0.8rem; /* Adjust spacing from card body */
+}
+
+/* Ensure cancel button doesn't get pushed too far */
+.leave-card-actions .cancel-btn {
+  margin-top: 0; /* Reset margin if needed */
+}

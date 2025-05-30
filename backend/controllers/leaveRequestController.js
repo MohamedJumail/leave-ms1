@@ -264,54 +264,35 @@ const getAdminLeaveRequests = async (request, h) => {
       .code(500);
   }
 }; 
-const insertLeaveRejection = async ({ leaveId, rejectedBy, role, rejectReason }) => {
-  try {
-    await db.query(
-      `INSERT INTO leave_rejections (leave_id, rejected_by, role, reject_reason)
-      VALUES (?, ?, ?, ?)`,
-      [leaveId, rejectedBy, role, rejectReason]
-    );
-  } catch (error) {
-    console.error("Error inserting into leave_rejections:", error);
-    throw error; 
-  }
-};
-
 const approveOrRejectLeaveRequest = async (request, h) => {
   const { id: approverId, role } = request.pre.auth;
   const { leaveId } = request.params;
-  const { decision, reason } = request.payload; // Get the reason from the payload
+  const { decision, reason } = request.payload; // Reason can be null for approval
 
   if (!["Approved", "Rejected"].includes(decision)) {
-    return h.response({ msg: "Invalid decision" }).code(400);
+      return h.response({ msg: "Invalid decision" }).code(400);
   }
 
   if (!["Manager", "HR", "Admin"].includes(role)) {
-    return h.response({ msg: "Unauthorized role" }).code(403);
+      return h.response({ msg: "Unauthorized role" }).code(403);
   }
 
   try {
-    const status = await updateLeaveApprovalByRole({ leaveId, role, decision });
-
-    // If the request was rejected, insert into leave_rejections table
-    if (decision === "Rejected") {
-      await insertLeaveRejection({
-        leaveId: parseInt(leaveId), // Ensure leaveId is an integer
-        rejectedBy: approverId,
-        role: role,
-        rejectReason: reason,
+      const status = await updateLeaveApprovalByRole({
+          leaveId: parseInt(leaveId),
+          role,
+          decision,
+          reason, // Pass the reason to the model
+          approverId,
       });
-    }
-
-    return h.response({ msg: `Leave ${status} as per ${role} decision.` });
+      return h.response({ msg: `Leave request ${status} by ${role}.` });
   } catch (err) {
-    console.error("Approval/Rejection error:", err);
-    return h
-      .response({ msg: "Failed to update leave", error: err.message })
-      .code(500);
+      console.error("Approval/Rejection error:", err);
+      return h
+          .response({ msg: "Failed to update leave", error: err.message })
+          .code(500);
   }
 };
-
 const cancelLeaveRequest = async (request, h) => {
   const userId = request.pre.auth.id;
   const { leaveId } = request.params;
@@ -372,6 +353,21 @@ const getAdminPendingRequestsForUser = async (req, h) => {
     return h.response({ error: "Failed to fetch leave requests." }).code(500);
   }
 };
+const getLeaveStatus = async (req, h) => {
+  const { leaveId } = req.params;
+
+  if (!leaveId) {
+    return h.response({ msg: 'Leave ID is required' }).code(400);
+  }
+
+  try {
+    const statusDetails = await leaveRequestModel.getLeaveStatusDetails(leaveId);
+    return h.response(statusDetails).code(200);
+  } catch (error) {
+    console.error("Error in getLeaveStatus controller:", error);
+    return h.response({ msg: 'Failed to fetch leave status details' }).code(500);
+  }
+};
 module.exports = {
   applyLeave,
   getMyLeaveRequests,
@@ -381,5 +377,6 @@ module.exports = {
   approveOrRejectLeaveRequest,
   getLeaveRequestsByStatus,
   getPendingRequestsByUserId,
-  getAdminPendingRequestsForUser
+  getAdminPendingRequestsForUser,
+  getLeaveStatus,
 };

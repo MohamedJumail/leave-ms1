@@ -1,5 +1,5 @@
-const leaveController = require('../controllers/leaveRequestController');
-const { verifyToken, roleCheck } = require('../middleware/authMiddleware');
+const leaveController = require('../controllers/leaveRequestController'); // Assuming this is your main leave controller
+const { verifyToken, roleCheck } = require('../middleware/authMiddleware'); // Assuming your auth middleware
 
 module.exports = [
   {
@@ -41,7 +41,7 @@ module.exports = [
     options: {
       pre: [verifyToken]
     }
-  },  
+  },
   {
     method: 'GET',
     path: '/api/leave/my-requests/status/{status}',
@@ -49,7 +49,7 @@ module.exports = [
     options: {
       pre: [verifyToken]
     }
-  },  
+  },
   {
     method: 'PUT',
     path: '/api/leave/approve-reject/{leaveId}',
@@ -73,5 +73,14 @@ module.exports = [
     options: {
       pre: [verifyToken, roleCheck(['HR', 'Manager', 'Admin'])]
     }
-  }  
+  },
+  // NEW ROUTE: Fetch detailed leave status by leave ID
+  {
+    method: 'GET',
+    path: '/api/leave/status/{leaveId}',
+    handler: leaveController.getLeaveStatus, // This will be the new controller function
+    options: {
+      pre: [verifyToken] // Only authenticated users can view their leave status
+    }
+  }
 ];

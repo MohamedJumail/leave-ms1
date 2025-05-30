@@ -203,106 +203,147 @@ const getLeaveRequestsForAdmin = async () => {
     throw error;
   }
 };
-// Approve or Reject a leave request by Manager/HR
-const updateLeaveApprovalByRole = async ({ leaveId, role, decision }) => {
+const updateLeaveStatus = async ({ leaveRequestId, approverRole, approvalStatus, approvalReason = null, approverId }) => {
+  await db.query(
+      `UPDATE leave_status
+      SET approval_status = ?, approval_reason = ?, approved_at = NOW()
+      WHERE leave_request_id = ? AND approver_role = ? AND approver_id = ?`,
+      [approvalStatus, approvalReason, leaveRequestId, approverRole, approverId]
+  );
+};
+
+const updateLeaveApprovalByRole = async ({ leaveId, role, decision, reason, approverId }) => {
   let column;
+  let approverRoleForStatus;
 
   if (role === "Manager") {
-    column = "manager_approval";
+      column = "manager_approval";
+      approverRoleForStatus = "Manager";
   } else if (role === "HR") {
-    column = "hr_approval";
-  } else if (role === "Admin") { // Assuming 'Admin' role is responsible for director_approval
-    column = "director_approval";
+      column = "hr_approval";
+      approverRoleForStatus = "HR";
+  } else if (role === "Admin") {
+      column = "director_approval";
+      approverRoleForStatus = "Director";
+  } else {
+      // This case should ideally be prevented by middleware, but as a safeguard
+      throw new Error("Unauthorized role attempting to update leave approval.");
   }
 
-  // 1. Update the relevant approval column if the role is valid
+  // 1. Update the relevant approval column in leave_requests
   if (column) {
-    await db.query(`UPDATE leave_requests SET ${column} = ? WHERE id = ?`, [
-      decision,
-      leaveId,
-    ]);
+      await db.query(`UPDATE leave_requests SET ${column} = ? WHERE id = ?`, [
+          decision,
+          leaveId,
+      ]);
+
+      // 2. Update the corresponding record in the leave_status table
+      // This update uses the approverId of the person who just took action
+      await updateLeaveStatus({
+          leaveRequestId: leaveId,
+          approverRole: approverRoleForStatus,
+          approvalStatus: decision,
+          approvalReason: reason,
+          approverId, // This is the ID of the manager/HR/Admin who just acted
+      });
   }
 
-  // 2. Refetch the updated leave request to check all approval statuses
-  let [[leave]] = await db.query( // Use 'let' here as 'leave' might be updated
-    `SELECT user_id, leave_type_id, start_date, end_date,
-            manager_approval, hr_approval, director_approval
-     FROM leave_requests WHERE id = ?`,
-    [leaveId]
+  // 3. Refetch the updated leave request to check all approval statuses
+  let [[leave]] = await db.query(
+      `SELECT user_id, leave_type_id, start_date, end_date,
+              manager_approval, hr_approval, director_approval
+       FROM leave_requests WHERE id = ?`,
+      [leaveId]
   );
 
-  const workingDays = await getWorkingDays(leave.start_date, leave.end_date);
-  const [[user]] = await db.query(`SELECT role FROM users WHERE id = ?`, [
-    leave.user_id,
-  ]);  // ✨ Auto-approve director for <= 3 working days, ONLY for Manager and Employee roles
-  if (
-    workingDays <= 3 &&
-    leave.director_approval === "Pending" &&
-    (user.role === "Manager" || user.role === "Employee") // New condition for applicant role
-  ) {
-    await db.query(
-      `UPDATE leave_requests SET director_approval = 'Approved' WHERE id = ?`,
-      [leaveId]
-    );
-    // Update the 'leave' object in memory to reflect the change
-    leave.director_approval = "Approved";
+  // If no leave request found (e.g., invalid leaveId), handle this case
+  if (!leave) {
+      throw new Error(`Leave request with ID ${leaveId} not found.`);
   }
-  // 5. Determine the final status based on all current approval states
+
+  // 4. Get working days for auto-approval logic
+  const workingDays = await getWorkingDays(leave.start_date, leave.end_date);
+
+  // 5. Get the role of the user who *applied* for the leave (applicant's role)
+  // Also fetch their manager_id, hr_id, admin_id to correctly identify approvers for status table
+  const [[applicantUser]] = await db.query(`SELECT role, manager_id, hr_id, admin_id FROM users WHERE id = ?`, [
+      leave.user_id,
+  ]);
+
+  // ✨ Auto-approve director for <= 3 working days, ONLY for Manager and Employee applicants
+  if (
+      workingDays <= 3 &&
+      leave.director_approval === "Pending" &&
+      (applicantUser.role === "Manager" || applicantUser.role === "Employee")
+  ) {
+      // Update leave_requests table for director approval
+      await db.query(
+          `UPDATE leave_requests SET director_approval = 'Approved' WHERE id = ?`,
+          [leaveId]
+      );
+
+      // Update the leave_status table for director approval (auto-approved)
+      // Use the applicant's admin_id as the approver_id for this auto-approval
+      await updateLeaveStatus({
+          leaveRequestId: leaveId,
+          approverRole: 'Director',
+          approvalStatus: 'Approved',
+          approvalReason: 'Auto-approved due to short leave duration.',
+          approverId: applicantUser.admin_id, // Use the admin_id from the applicant's record
+      });
+
+      // Update the 'leave' object in memory to reflect the change for final status determination
+      leave.director_approval = "Approved";
+  }
+
+  // 6. Determine the final overall status of the leave request
   let finalStatus = "Pending";
   let allApproved = true;
 
-  // Check Manager Approval
-  if (leave.manager_approval !== "Approved" && leave.manager_approval !== "Not Required") {
-    allApproved = false;
-  }
-
-  // Check HR Approval
-  if (leave.hr_approval !== "Approved" && leave.hr_approval !== "Not Required") {
-    allApproved = false;
-  }
-
-  // Check Director Approval
-  if (leave.director_approval !== "Approved" && leave.director_approval !== "Not Required") {
-    allApproved = false;
-  }
-
-  if (allApproved) {
-    finalStatus = "Approved";
-
-    // 6. Deduct leave balance upon final approval
-    // You might want a flag in the DB to prevent double deduction, or ensure this function is idempotent.
-    // For simplicity, we'll assume it's safe to deduct here once finalStatus is Approved.
-    await db.query(
-      `UPDATE leave_balances
-        SET balance = balance - ?
-        WHERE user_id = ? AND leave_type_id = ?`,
-      [workingDays, leave.user_id, leave.leave_type_id]
-    );
-  } else if (
-    leave.manager_approval === "Rejected" ||
-    leave.hr_approval === "Rejected" ||
-    leave.director_approval === "Rejected"
+  // Check if any approval is explicitly rejected
+  if (
+      leave.manager_approval === "Rejected" ||
+      leave.hr_approval === "Rejected" ||
+      leave.director_approval === "Rejected"
   ) {
-    finalStatus = "Rejected";
+      finalStatus = "Rejected";
+  } else {
+      // If no one rejected, check if everyone approved or if approval is not required
+      if (leave.manager_approval !== "Approved" && leave.manager_approval !== "Not Required") {
+          allApproved = false;
+      }
+      if (leave.hr_approval !== "Approved" && leave.hr_approval !== "Not Required") {
+          allApproved = false;
+      }
+      if (leave.director_approval !== "Approved" && leave.director_approval !== "Not Required") {
+          allApproved = false;
+      }
+
+      if (allApproved) {
+          finalStatus = "Approved";
+          // 7. Deduct leave balance upon final approval
+          await db.query(
+              `UPDATE leave_balances
+               SET balance = balance - ?
+               WHERE user_id = ? AND leave_type_id = ?`,
+              [workingDays, leave.user_id, leave.leave_type_id]
+          );
+      }
   }
 
-  // 7. Update the overall status and user status in the database
+  // 8. Update the overall status and user_status in the leave_requests table
   await db.query(
-    `UPDATE leave_requests
-      SET status = ?, user_status = ?
-      WHERE id = ?`,
-    [
-      finalStatus,
-      finalStatus === "Approved"
-        ? "Approved"
-        : finalStatus === "Rejected"
-        ? "Rejected"
-        : "Pending",
-      leaveId,
-    ]
+      `UPDATE leave_requests
+       SET status = ?, user_status = ?
+       WHERE id = ?`,
+      [
+          finalStatus,
+          finalStatus === "Approved" ? "Approved" : finalStatus === "Rejected" ? "Rejected" : "Pending",
+          leaveId,
+      ]
   );
 
-  return finalStatus;
+  return finalStatus; // Return the final determined status
 };
 const cancelLeaveByUser = async (userId, leaveId) => {
   const [result] = await db.query(
@@ -353,6 +394,22 @@ const fetchPendingRequestsWithDetails = async (userId) => {
   );
   return rows;
 };
+const getLeaveStatusDetails = async (leaveRequestId) => {
+  try {
+      const [rows] = await db.query(
+          `SELECT ls.*, u.name
+           FROM leave_status ls
+           JOIN users u ON ls.approver_id = u.id
+           WHERE ls.leave_request_id = ?
+           ORDER BY ls.approved_at ASC`,
+          [leaveRequestId]
+      );
+      return rows;
+  } catch (error) {
+      console.error("Error fetching leave status details:", error);
+      throw error;
+  }
+};
 module.exports = {
   createLeaveRequest,
   getLeaveRequestsByUser,
@@ -363,4 +420,5 @@ module.exports = {
   getLeaveRequestsByUserAndStatus,
   findPendingByUserId,
   fetchPendingRequestsWithDetails,
+  getLeaveStatusDetails
 };
