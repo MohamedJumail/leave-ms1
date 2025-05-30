@@ -263,31 +263,55 @@ const getAdminLeaveRequests = async (request, h) => {
       .response({ msg: "Something went wrong", error: error.message })
       .code(500);
   }
+}; 
+const insertLeaveRejection = async ({ leaveId, rejectedBy, role, rejectReason }) => {
+  try {
+    await db.query(
+      `INSERT INTO leave_rejections (leave_id, rejected_by, role, reject_reason)
+      VALUES (?, ?, ?, ?)`,
+      [leaveId, rejectedBy, role, rejectReason]
+    );
+  } catch (error) {
+    console.error("Error inserting into leave_rejections:", error);
+    throw error; 
+  }
 };
+
 const approveOrRejectLeaveRequest = async (request, h) => {
   const { id: approverId, role } = request.pre.auth;
   const { leaveId } = request.params;
-  const { decision } = request.payload;
+  const { decision, reason } = request.payload; // Get the reason from the payload
 
   if (!["Approved", "Rejected"].includes(decision)) {
     return h.response({ msg: "Invalid decision" }).code(400);
   }
 
-  // Allow Admin role in addition to Manager and HR
   if (!["Manager", "HR", "Admin"].includes(role)) {
     return h.response({ msg: "Unauthorized role" }).code(403);
   }
 
   try {
     const status = await updateLeaveApprovalByRole({ leaveId, role, decision });
+
+    // If the request was rejected, insert into leave_rejections table
+    if (decision === "Rejected") {
+      await insertLeaveRejection({
+        leaveId: parseInt(leaveId), // Ensure leaveId is an integer
+        rejectedBy: approverId,
+        role: role,
+        rejectReason: reason,
+      });
+    }
+
     return h.response({ msg: `Leave ${status} as per ${role} decision.` });
   } catch (err) {
-    console.error("Approval error:", err);
+    console.error("Approval/Rejection error:", err);
     return h
       .response({ msg: "Failed to update leave", error: err.message })
       .code(500);
   }
 };
+
 const cancelLeaveRequest = async (request, h) => {
   const userId = request.pre.auth.id;
   const { leaveId } = request.params;

@@ -19,7 +19,51 @@ const findPendingByUserId = async (userId, role) => {
   const [rows] = await db.execute(query, params);
   return rows;
 };
-// Create a leave request
+const createLeaveStatusRecords = async (leaveRequestId, leaveTypeId, managerId, hrId, directorId) => {
+  const statusesToInsert = [];
+
+  // Manager Approval
+  if (managerId !== null) {
+      statusesToInsert.push({
+          leave_request_id: leaveRequestId,
+          leave_type_id: leaveTypeId,
+          approver_id: managerId,
+          approver_role: 'Manager',
+          approval_status: 'Pending'
+      });
+  }
+
+  // HR Approval
+  if (hrId !== null) {
+      statusesToInsert.push({
+          leave_request_id: leaveRequestId,
+          leave_type_id: leaveTypeId,
+          approver_id: hrId,
+          approver_role: 'HR',
+          approval_status: 'Pending'
+      });
+  }
+
+  // Director Approval
+  if (directorId !== null) {
+      statusesToInsert.push({
+          leave_request_id: leaveRequestId,
+          leave_type_id: leaveTypeId,
+          approver_id: directorId,
+          approver_role: 'Director',
+          approval_status: 'Pending'
+      });
+  }
+
+  // Insert all status records into the leave_status table
+  for (const status of statusesToInsert) {
+      await db.query(
+          `INSERT INTO leave_status (leave_request_id, leave_type_id, approver_id, approver_role, approval_status)
+           VALUES (?, ?, ?, ?, ?)`,
+          [status.leave_request_id, status.leave_type_id, status.approver_id, status.approver_role, status.approval_status]
+      );
+  }
+};
 const createLeaveRequest = async ({
   user_id,
   leave_type_id,
@@ -29,39 +73,39 @@ const createLeaveRequest = async ({
 }) => {
   // Step 1: Fetch user details
   const [users] = await db.query(
-    `SELECT manager_id, hr_id, admin_id FROM users WHERE id = ?`,
-    [user_id]
+      `SELECT manager_id, hr_id, admin_id FROM users WHERE id = ?`,
+      [user_id]
   );
 
   if (users.length === 0) {
-    throw new Error("User not found");
+      throw new Error("User not found");
   }
 
   const { manager_id, hr_id, admin_id } = users[0];
 
-  // Step 2: Set approvals conditionally
-  const managerApproval = manager_id === null ? "Not Required" : "Pending";
-  const hrApproval = hr_id === null ? "Not Required" : "Pending";
-  const directorApproval = admin_id === null ? "Not Required" : "Pending";
-
-  // Step 3: Insert into leave_requests
+  // Step 2: Insert into leave_requests
   const [result] = await db.query(
-    `INSERT INTO leave_requests 
-     (user_id, leave_type_id, start_date, end_date, reason, status, manager_approval, hr_approval, director_approval, user_status) 
-     VALUES (?, ?, ?, ?, ?, 'Pending', ?, ?, ?, 'Pending')`,
-    [
-      user_id,
-      leave_type_id,
-      start_date,
-      end_date,
-      reason,
-      managerApproval,
-      hrApproval,
-      directorApproval,
-    ]
+      `INSERT INTO leave_requests
+      (user_id, leave_type_id, start_date, end_date, reason, status, manager_approval, hr_approval, director_approval, user_status)
+      VALUES (?, ?, ?, ?, ?, 'Pending', ?, ?, ?, 'Pending')`,
+      [
+          user_id,
+          leave_type_id,
+          start_date,
+          end_date,
+          reason,
+          manager_id === null ? "Not Required" : "Pending",
+          hr_id === null ? "Not Required" : "Pending",
+          admin_id === null ? "Not Required" : "Pending",
+      ]
   );
 
-  return result.insertId;
+  const leaveRequestId = result.insertId;
+
+  // Step 3: Create leave status records
+  await createLeaveStatusRecords(leaveRequestId, leave_type_id, manager_id, hr_id, admin_id);
+
+  return leaveRequestId;
 };
 // Fetch all leave requests for a user
 const getLeaveRequestsByUser = async (userId) => {

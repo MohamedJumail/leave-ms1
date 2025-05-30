@@ -1,3 +1,4 @@
+// src/pages/LeaveApproval.jsx
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
@@ -17,7 +18,7 @@ const LeaveApproval = () => {
   const [search, setSearch] = useState('');
   const [actionLoadingId, setActionLoadingId] = useState(null);
   const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
-  const [rejectRequestId, setRejectRequestId] = useState(null);
+  const [rejectRequestId, setRejectRequestId] = useState(null); // State to hold the ID of the request being rejected
 
   useEffect(() => {
     fetchLeaveRequests();
@@ -48,17 +49,19 @@ const LeaveApproval = () => {
     }
   };
 
+  // This function handles both approval and rejection
+  // 'reason' is only provided when 'decision' is 'Rejected'
   const handleApproval = async (requestId, decision, reason = '') => {
     setActionLoadingId(requestId);
     try {
       await api.put(
         `/api/leave/approve-reject/${requestId}`,
-        { decision, reason },
+        { decision, reason }, // Send decision and reason in the payload
         { headers: { Authorization: `Bearer ${token}` } }
       );
       fetchLeaveRequests(); // Refresh leave requests after action
       setIsRejectModalOpen(false); // Close the modal after rejection
-      setRejectRequestId(null);
+      setRejectRequestId(null); // Clear the stored request ID
     } catch (error) {
       console.error(`Error approving/rejecting leave request:`, error);
       // Optionally display an error message to the user
@@ -67,14 +70,24 @@ const LeaveApproval = () => {
     }
   };
 
+  // Opens the rejection modal and stores the requestId
   const handleRejectClick = (requestId) => {
     setRejectRequestId(requestId);
     setIsRejectModalOpen(true);
   };
 
+  // Closes the rejection modal and clears the stored requestId
   const closeRejectModal = () => {
     setIsRejectModalOpen(false);
     setRejectRequestId(null);
+  };
+
+  // This function is called by the RejectReasonModal when the user confirms rejection
+  const handleConfirmReject = (reasonFromModal) => {
+    if (rejectRequestId) {
+      // Call handleApproval with the stored requestId, 'Rejected' decision, and the reason from the modal
+      handleApproval(rejectRequestId, 'Rejected', reasonFromModal);
+    }
   };
 
   const filteredLeaveRequests = leaveRequests.filter((request) =>
@@ -161,8 +174,8 @@ const LeaveApproval = () => {
       <RejectReasonModal
         isOpen={isRejectModalOpen}
         onRequestClose={closeRejectModal}
-        onConfirmReject={handleApproval}
-        requestId={rejectRequestId}
+        onConfirmReject={handleConfirmReject} // Pass the new handler
+        // requestId is no longer passed to the modal, as the modal only needs to return the reason
       />
     </div>
   );

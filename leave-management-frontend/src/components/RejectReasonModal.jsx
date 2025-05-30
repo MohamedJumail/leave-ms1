@@ -2,11 +2,12 @@
 import React, { useState } from 'react';
 import './RejectReasonModal.css'; // Create this CSS file
 
-const RejectReasonModal = ({ isOpen, onRequestClose, onConfirmReject, requestId }) => {
+const RejectReasonModal = ({ isOpen, onRequestClose, onConfirmReject }) => { // Removed requestId from props
   const [rejectionReason, setRejectionReason] = useState('');
 
   const handleConfirm = () => {
-    onConfirmReject(requestId, rejectionReason);
+    // Only pass the rejectionReason to the parent's handler
+    onConfirmReject(rejectionReason);
     setRejectionReason(''); // Clear reason after submission
   };
 

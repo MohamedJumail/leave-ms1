@@ -55,7 +55,7 @@ module.exports = [
     path: '/api/leave/approve-reject/{leaveId}',
     handler: leaveController.approveOrRejectLeaveRequest,
     options: {
-      pre: [verifyToken, roleCheck(['Manager', 'HR', 'Admin'])] 
+      pre: [verifyToken, roleCheck(['Manager', 'HR', 'Admin'])]
     }
   },
   {
