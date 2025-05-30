@@ -38,9 +38,6 @@ const register = async (request, h) => {
 };
 const login = async (request, h) => {
   const { email, password } = request.payload;
-
-  console.log('Login attempt for email:', email); // Log incoming request
-
   try {
     const user = await findUserByEmail(email);
     if (!user) {
@@ -56,10 +53,6 @@ const login = async (request, h) => {
 
     const token = generateToken(user);
     const { password: _, ...safeUser } = user;
-
-    console.log('Login successful:', { email, userId: user.id }); // Log success
-    console.log('Generated token:', token); // Log token (⚠️ Remove in production)
-
     return h.response({ 
       success: true,
       token,

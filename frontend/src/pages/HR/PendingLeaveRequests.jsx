@@ -73,7 +73,7 @@ const PendingLeaveRequestsHR = () => {
               <th>From</th>
               <th>To</th>
               <th>Days</th>
-              <th>Your Approval</th>
+              <th>Manager Approval</th>
               <th>Actions</th>
             </tr>
           </thead>

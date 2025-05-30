@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
 import ConfirmModal from '../../components/ConfirmModal';
-import './ManageUsers.css';
+import './ManageUsersAdmin.css';
 
 const EditUserCard = ({ user, onUpdate, onCancel }) => {
   const [formData, setFormData] = useState({
@@ -92,7 +92,7 @@ const EditUserCard = ({ user, onUpdate, onCancel }) => {
   );
 };
 
-const ManageUsers = () => {
+const ManageUsersAdmin = () => {
   const { token } = useAuth();
   const [users, setUsers] = useState([]);
   const [search, setSearch] = useState('');
@@ -262,4 +262,4 @@ const ManageUsers = () => {
   );
 };
 
-export default ManageUsers;
+export default ManageUsersAdmin;

@@ -55,7 +55,7 @@ module.exports = [
     path: '/api/leave/approve-reject/{leaveId}',
     handler: leaveController.approveOrRejectLeaveRequest,
     options: {
-      pre: [verifyToken, roleCheck(['Manager', 'HR', 'Admin'])] // Allow Admin role here
+      pre: [verifyToken, roleCheck(['Manager', 'HR', 'Admin'])] 
     }
   },
   {
@@ -63,7 +63,7 @@ module.exports = [
     path: '/api/leave/my-pending-requests/{userId}',
     handler: leaveController.getPendingRequestsByUserId,
     options: {
-      pre: [verifyToken, roleCheck(['Manager', 'HR'])] // Optional: restrict to Manager/HR
+      pre: [verifyToken, roleCheck(['Manager', 'HR'])]
     }
   },
   {

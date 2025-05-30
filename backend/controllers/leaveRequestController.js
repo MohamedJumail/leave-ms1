@@ -71,33 +71,49 @@ const getWorkingDays = (start, end, holidays = []) => {
 
 const applyLeave = async (request, h) => {
   try {
+    console.log("applyLeave - Request received:", request.payload);
     const user_id = request.pre.auth.id;
     const { leave_type_id, start_date, end_date, reason } = request.payload;
+
+    console.log("applyLeave - User ID:", user_id);
+    console.log("applyLeave - Leave Type ID:", leave_type_id);
+    console.log("applyLeave - Start Date:", start_date);
+    console.log("applyLeave - End Date:", end_date);
+    console.log("applyLeave - Reason:", reason);
 
     const today = new Date();
     const start = new Date(start_date);
     const end = new Date(end_date);
 
-    if (start < today) {
-      return h.response({ msg: "Cannot apply for past dates" }).code(400);
-    }
+    console.log("applyLeave - Today's Date:", today);
+    console.log("applyLeave - Parsed Start Date:", start);
+    console.log("applyLeave - Parsed End Date:", end);
 
     // Validation 2: Start date must be before or equal to end date
     if (start > end) {
+      console.log("applyLeave - Validation Failed: Start date after end date");
       return h
         .response({ msg: "Start date cannot be after end date" })
         .code(400);
     }
 
     // 1. Validate leave type
+    console.log("applyLeave - Fetching all leave types");
     const leaveTypes = await getAllLeaveTypes();
+    console.log("applyLeave - Fetched leave types:", leaveTypes);
     const selectedType = leaveTypes.find((lt) => lt.id === leave_type_id);
-    if (!selectedType)
+    console.log("applyLeave - Selected leave type:", selectedType);
+    if (!selectedType) {
+      console.log("applyLeave - Validation Failed: Invalid leave type");
       return h.response({ msg: "Invalid leave type" }).code(400);
+    }
 
     // 2. Check apply-before-days rule
     const daysBefore = (start - today) / (1000 * 60 * 60 * 24);
+    console.log("applyLeave - Days before start date:", daysBefore);
+    console.log("applyLeave - Apply before days required:", selectedType.apply_before_days);
     if (daysBefore < selectedType.apply_before_days) {
+      console.log("applyLeave - Validation Failed: Apply before days not met");
       return h
         .response({
           msg: `You must apply at least ${selectedType.apply_before_days} days in advance`,
@@ -106,13 +122,17 @@ const applyLeave = async (request, h) => {
     }
 
     // 3. Get user's leave balance
+    console.log("applyLeave - Fetching user leave balances for user ID:", user_id);
     const balances = await getUserLeaveBalances(user_id);
+    console.log("applyLeave - User leave balances:", balances);
     const balanceEntry = balances.find(
       (b) =>
         b.leave_type.trim().toLowerCase() ===
         selectedType.name.trim().toLowerCase()
     );
+    console.log("applyLeave - Found balance entry:", balanceEntry);
     if (!balanceEntry) {
+      console.log("applyLeave - Validation Failed: No leave balance for this type");
       return h
         .response({
           msg: "No leave balance for this type",
@@ -126,16 +146,29 @@ const applyLeave = async (request, h) => {
     }
 
     // 4. Get holidays
+    console.log("applyLeave - Fetching holidays");
     const [holidayRows] = await db.query(`SELECT date FROM holidays`);
     const holidays = holidayRows.map((h) => h.date.toISOString().split("T")[0]);
+    console.log("applyLeave - Fetched holidays:", holidays);
 
     // 5. Calculate working days
+    console.log("applyLeave - Calculating working days between:", start, "and", end, "excluding:", holidays);
     const workingDays = getWorkingDays(start, end, holidays);
-    if (workingDays.length === 0)
+    console.log("applyLeave - Calculated working days:", workingDays);
+    if (workingDays.length === 0) {
+      console.log("applyLeave - Validation Failed: No working days selected");
       return h.response({ msg: "No working days selected" }).code(400);
+    }
 
+    if (start < today) {
+      console.log("applyLeave - Validation Failed: Cannot apply for past dates");
+      return h.response({ msg: "Cannot apply for past dates" }).code(400);
+    }
     // 6. Check balance
+    console.log("applyLeave - Working days required:", workingDays.length);
+    console.log("applyLeave - Available balance:", balanceEntry.balance);
     if (workingDays.length > balanceEntry.balance) {
+      console.log("applyLeave - Validation Failed: Insufficient leave balance");
       return h
         .response({
           msg: `Insufficient leave balance. You need ${workingDays.length}, but have ${balanceEntry.balance}`,
@@ -144,19 +177,20 @@ const applyLeave = async (request, h) => {
     }
 
     // 6.5 Check for overlapping leave requests
+    console.log("applyLeave - Checking for overlapping leave requests");
     const [overlapping] = await db.query(
       `
-    SELECT * FROM leave_requests
-    WHERE user_id = ?
-      AND (
-        (start_date <= ? AND end_date >= ?)
-        OR
-        (start_date <= ? AND end_date >= ?)
-        OR
-        (start_date >= ? AND end_date <= ?)
-      )
-      AND status IN ('Pending', 'Approved')
-  `,
+      SELECT * FROM leave_requests
+      WHERE user_id = ?
+        AND (
+          (start_date <= ? AND end_date >= ?)
+          OR
+          (start_date <= ? AND end_date >= ?)
+          OR
+          (start_date >= ? AND end_date <= ?)
+        )
+        AND status IN ('Pending', 'Approved')
+    `,
       [
         user_id,
         end_date,
@@ -169,6 +203,7 @@ const applyLeave = async (request, h) => {
     );
 
     if (overlapping.length > 0) {
+      console.log("applyLeave - Validation Failed: Overlapping leave request found");
       return h
         .response({
           msg: "You already have a leave request that overlaps with these dates",
@@ -177,6 +212,7 @@ const applyLeave = async (request, h) => {
     }
 
     // 7. Insert into leave_requests with director_approval set to 'Pending'
+    console.log("applyLeave - Creating leave request");
     const leaveId = await createLeaveRequest({
       user_id,
       leave_type_id,
@@ -184,6 +220,7 @@ const applyLeave = async (request, h) => {
       end_date,
       reason,
     });
+    console.log("applyLeave - Leave request created with ID:", leaveId);
 
     return h
       .response({

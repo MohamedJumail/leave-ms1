@@ -9,7 +9,7 @@ const init = async () => {
     routes: {
       cors: {
         origin: ['http://localhost:5173'], // Allow your frontend origin
-        credentials: true, // Allow all origins for now
+        credentials: true, 
       },
     },
   });
