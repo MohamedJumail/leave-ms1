@@ -67,9 +67,8 @@ const Leave = () => {
     };
 
     const fetchLeaveStatus = async (leaveId) => {
-        // Set modal to open and show loading state immediately
         setSelectedLeaveId(leaveId);
-        setLeaveStatusDetails(null); // Clear previous details
+        setLeaveStatusDetails(null);
         setIsStatusModalOpen(true);
 
         try {
@@ -81,7 +80,7 @@ const Leave = () => {
         } catch (error) {
             console.error("Error fetching leave status:", error);
             setError("Failed to load leave status");
-            setLeaveStatusDetails([]); // Set to empty array to indicate no data/error
+            setLeaveStatusDetails([]);
         }
     };
 
@@ -111,7 +110,7 @@ const Leave = () => {
             setLoading(false);
         }
 
-        return useEffectCleanup; // Cleanup on unmount or token change
+        return useEffectCleanup;
     }, [token]);
 
     const calculateWorkingDays = (startDate, endDate) => {
@@ -126,8 +125,7 @@ const Leave = () => {
 
         while (currentDate <= end) {
             const dayOfWeek = currentDate.getDay();
-            // Skip weekends (Saturday: 6, Sunday: 0)
-            if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+            if (dayOfWeek !== 0 && dayOfWeek !== 6) { // Skip weekends (Sunday: 0, Saturday: 6)
                 days++;
             }
             currentDate.setDate(currentDate.getDate() + 1);
@@ -156,7 +154,7 @@ const Leave = () => {
         const formDataToSend = {
             ...formData,
             leave_type_id: Number(formData.leave_type_id),
-            number_of_days: workingDays, // Include calculated working days
+            number_of_days: workingDays,
         };
 
         console.log("Submitting Leave Request with data:", formDataToSend);
@@ -166,7 +164,8 @@ const Leave = () => {
                 headers: { Authorization: `Bearer ${token}` },
             });
             console.log("Leave Request Successful:", response.data);
-            alert("Leave request submitted successfully"); // Consider a custom modal instead of alert
+            // Replace alert with a custom modal or notification for better UX
+            // alert("Leave request submitted successfully");
             setFormData({
                 leave_type_id: "",
                 start_date: "",
@@ -175,7 +174,7 @@ const Leave = () => {
             });
             setWorkingDays(0);
             fetchLeaves();
-            fetchLeaveBalances(); // Refresh balances after applying
+            fetchLeaveBalances();
         } catch (err) {
             console.error("Error submitting leave request:", err);
             if (err.response) {
@@ -205,7 +204,6 @@ const Leave = () => {
         }
     };
 
-    // Helper: status to badge class
     const getStatusBadgeClass = (status) => {
         switch (status) {
             case "Pending":
@@ -220,33 +218,42 @@ const Leave = () => {
         }
     };
 
-    // Leave card component (reusable for both sections)
-    const LeaveCard = ({ leave, onCancel, onViewStatus, showCancelButton }) => (
-        <div key={leave.id} className="leave-card">
-            <div className="leave-card-header">
-                <h4 className="leave-type">{leave.leave_type}</h4>
-                <span className={getStatusBadgeClass(leave.status)}>{leave.status}</span>
-            </div>
-            <div className="leave-card-body">
-                <p><strong>From:</strong> {leave.start_date.split("T")[0]}</p>
-                <p><strong>To:</strong> {leave.end_date.split("T")[0]}</p>
-                <p><strong>Reason:</strong> {leave.reason}</p>
-                {leave.number_of_days && <p><strong>Days:</strong> {leave.number_of_days}</p>}
-            </div>
-            <div className="leave-card-actions">
-                {showCancelButton && (
-                    <button onClick={() => onCancel(leave.id)} className="cancel-btn" type="button">
-                        Cancel
-                    </button>
-                )}
-                <button onClick={() => onViewStatus(leave.id)} className="view-status-btn" type="button">
-                    View Status
-                </button>
-            </div>
-        </div>
-    );
+    const LeaveCard = ({ leave, onCancel, onViewStatus }) => {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); // Normalize today's date to start of day
+        const leaveEndDate = new Date(leave.end_date);
+        leaveEndDate.setHours(0, 0, 0, 0); // Normalize leave end date to start of day
 
-    // Render leave requests by status for the "Pending" section
+        // Show cancel button if status is Pending or Approved AND end_date is today or in the future
+        const showCancelButton = (leave.status === "Pending" || leave.status === "Approved") &&
+                                 (leaveEndDate >= today);
+
+        return (
+            <div key={leave.id} className="leave-card">
+                <div className="leave-card-header">
+                    <h4 className="leave-type">{leave.leave_type}</h4>
+                    <span className={getStatusBadgeClass(leave.status)}>{leave.status}</span>
+                </div>
+                <div className="leave-card-body">
+                    <p><strong>From:</strong> {leave.start_date.split("T")[0]}</p>
+                    <p><strong>To:</strong> {leave.end_date.split("T")[0]}</p>
+                    <p><strong>Reason:</strong> {leave.reason}</p>
+                    {leave.number_of_days && <p><strong>Days:</strong> {leave.number_of_days}</p>}
+                </div>
+                <div className="leave-card-actions">
+                    {showCancelButton && (
+                        <button onClick={() => onCancel(leave.id)} className="cancel-btn" type="button">
+                            Cancel
+                        </button>
+                    )}
+                    <button onClick={() => onViewStatus(leave.id)} className="view-status-btn" type="button">
+                        View Status
+                    </button>
+                </div>
+            </div>
+        );
+    };
+
     const renderLeavesByStatus = (status) =>
         leaves
             .filter((leave) => leave.status === status)
@@ -256,11 +263,10 @@ const Leave = () => {
                     leave={leave}
                     onCancel={cancelLeave}
                     onViewStatus={fetchLeaveStatus}
-                    showCancelButton={status === "Pending"} // Only show cancel for pending
+                    // showCancelButton prop is now handled internally by LeaveCard based on date and status
                 />
             ));
 
-    // Render leave history with filter and colored badges
     const renderFilteredHistory = () => {
         let filteredLeaves = leaves;
         if (historyFilter !== "All") {
@@ -274,7 +280,8 @@ const Leave = () => {
                 key={leave.id}
                 leave={leave}
                 onViewStatus={fetchLeaveStatus}
-                showCancelButton={false} // Never show cancel button in history
+                onCancel={cancelLeave} // Pass onCancel even if not always used by LeaveCard
+                // showCancelButton prop is now handled internally by LeaveCard based on date and status
             />
         ));
     };
@@ -290,7 +297,6 @@ const Leave = () => {
 
     return (
         <div className="leave-container">
-            {/* Leave Balances Cards */}
             <h2 className="balances-heading">Leave Balances</h2>
             <div className="leave-balances-container" aria-label="Leave Balances">
                 {leaveBalances.map(({ id, leave_type, balance }) => (
@@ -327,7 +333,6 @@ const Leave = () => {
                             >
                                 <option value="">Select</option>
                                 {leaveTypes.map((type) => {
-                                    // Find the corresponding balance for this leave type
                                     const balanceInfo = leaveBalances.find(
                                         (balance) => balance.leave_type === type.name
                                     );
@@ -415,7 +420,6 @@ const Leave = () => {
                 </>
             )}
 
-            {/* Leave Status Modal */}
             <LeaveStatusModal
                 isOpen={isStatusModalOpen}
                 onRequestClose={closeStatusModal}

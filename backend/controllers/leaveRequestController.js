@@ -298,7 +298,7 @@ const cancelLeaveRequest = async (request, h) => {
   const { leaveId } = request.params;
 
   try {
-    const result = await cancelLeaveByUser(userId, leaveId);
+    const result = await cancelLeaveByUser(leaveId, userId);
 
     if (result.affectedRows === 0) {
       return h

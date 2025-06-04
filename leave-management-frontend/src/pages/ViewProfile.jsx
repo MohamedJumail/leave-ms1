@@ -70,13 +70,13 @@ const ViewProfile = () => {
   return (
     <div className="vp-card">
       <h2 className="vp-title">Your Profile</h2>
-      <p><strong>Name:</strong> {profile.name}</p>
-      <p><strong>Email:</strong> {profile.email}</p>
-      <p><strong>Role:</strong> {profile.role}</p>
-      <p><strong>Department:</strong> {profile.department || 'N/A'}</p>
-      {profile.manager_id && <p><strong>Manager ID:</strong> {profile.manager_id}</p>}
-      {profile.hr_id && <p><strong>HR ID:</strong> {profile.hr_id}</p>}
-
+      <p><strong>Name:</strong> {profile.employee_name}</p>
+      <p><strong>Email:</strong> {profile.employee_email}</p>
+      <p><strong>Role:</strong> {profile.employee_role}</p>
+      <p><strong>Department:</strong> {profile.employee_department || 'N/A'}</p>
+      {profile.manager_name && <p><strong>Manager:</strong> {profile.manager_name}</p>}
+      {profile.hr_name && <p><strong>HR:</strong> {profile.hr_name}</p>}
+      {profile.admin_name && <p><strong>Director:</strong> {profile.admin_name}</p>}
       <hr className="vp-separator" />
 
       {!showChangePassword ? (

@@ -4,8 +4,25 @@ const bcrypt = require("bcrypt");
 // ✅ Fetch a user with limited public profile fields
 const getUserById = async (id) => {
   const [rows] = await db.query(
-    `SELECT id, name, email, role, manager_id, hr_id, department
-     FROM users WHERE id = ?`,
+    `SELECT
+    e.id AS employee_id,
+    e.name AS employee_name,
+    e.email AS employee_email,
+    e.role AS employee_role,
+    m.name AS manager_name,  -- Will be NULL if e.manager_id is NULL
+    h.name AS hr_name,       -- Will be NULL if e.hr_id is NULL
+    a.name AS admin_name,    -- Will be NULL if e.admin_id is NULL
+    e.department AS employee_department
+FROM
+    users e
+LEFT JOIN
+    users m ON e.manager_id = m.id
+LEFT JOIN
+    users h ON e.hr_id = h.id
+LEFT JOIN
+    users a ON e.admin_id = a.id
+WHERE
+    e.id = ?;`,
     [id]
   );
   return rows[0];
@@ -130,5 +147,5 @@ module.exports = {
   adminUpdateUserDetails,
   getTeamMembersByManager,
   isUserOnLeave,
-  getTeamMembersByHR
+  getTeamMembersByHR,
 };

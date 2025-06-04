@@ -534,8 +534,8 @@
   background-color: #1DA1F2;
   color: white;
   border: none;
-  border-radius: 6px;
-  padding: 0.5rem 1rem;
+  padding: 5.5px 5.5px;
+  border-radius: 3px;
   cursor: pointer;
   font-weight: 600;
   font-size: 0.9rem;

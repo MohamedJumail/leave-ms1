@@ -54,9 +54,13 @@ const Dashboard = () => {
 
   const renderEmployeeDashboard = () => (
     <>
-      <h1>Welcome, {profile.name}!</h1>
-      <p><strong>Role:</strong> {profile.role}</p>
-      <p><strong>Department:</strong> {profile.department || 'N/A'}</p>
+      <h1>Welcome, {profile.employee_name}!</h1>
+      <p><strong>Role:</strong> {profile.employee_role}</p>
+      {/* Conditional rendering for Manager, HR, and Director */}
+      {profile.manager_name && <p><strong>Manager:</strong> {profile.manager_name}</p>}
+      {profile.hr_name && <p><strong>HR:</strong> {profile.hr_name}</p>}
+      {profile.admin_name && <p><strong>Director:</strong> {profile.admin_name}</p>}
+      <p><strong>Department:</strong> {profile.employee_department || 'N/A'}</p>
 
       <hr className="dashboard-separator" />
 
@@ -105,7 +109,7 @@ const Dashboard = () => {
       )}
     </>
   );
-  const role = profile.role?.toLowerCase();
+  const role = profile.employee_role?.toLowerCase(); // Use employee_role from the profile
 
   return (
     <div className="dashboard-container">
