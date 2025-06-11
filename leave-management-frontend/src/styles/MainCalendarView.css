@@ -42,7 +42,7 @@
 }
 
 .toggle-button.active {
-    background-color: #8be9fd; /* Bright blue for active state */
+    background-color: #1DA1F2; /* Bright blue for active state */
     color: #282a36; /* Dark text for active button */
     border-color: #8be9fd; /* Matching border color */
     box-shadow: 0 6px 12px rgba(139, 233, 253, 0.3); /* Glow effect for active button */

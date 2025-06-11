@@ -1,171 +1,223 @@
-.keka-team-calendar-container {
-    padding: 1rem;
-    background-color: #1e1e1e;
-    color: #ffffff;
-    font-family: Arial, sans-serif;
-    border-radius: 8px;
-    overflow-x: auto;
+/* Base Styles - Dark Mode by Default */
+.keka-calendar-container {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  max-width: 100%;
+  overflow-x: auto;
+  padding: 20px;
+  background-color: #1a1a1a; /* Black background */
+  color: #f5f5f5; /* Light text color */
+}
+
+/* Calendar Controls */
+.calendar-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.calendar-controls button {
+  background: #333; /* Darker buttons */
+  color: #f5f5f5; /* Light text */
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.calendar-controls button:hover {
+  background: #555; /* Slightly lighter on hover */
+}
+
+.calendar-controls h2 {
+  margin: 0;
+  font-size: 1.4rem;
+  color: #e0e0e0;
+}
+
+/* Calendar Grid */
+.team-calendar {
+  display: inline-block;
+  min-width: 100%;
+}
+
+.calendar-header,
+.calendar-row {
+  display: flex;
+  min-width: 100%;
+}
+
+.calendar-header {
+  margin-bottom: 10px; /* Add gap below the header row */
+}
+
+.calendar-row {
+  margin-bottom: 8px; /* Gap between rows */
+  border-radius: 8px; /* Subtle rounded corners for the entire row block */
+  overflow: hidden; /* Ensures inner elements respect row border-radius */
+}
+
+.header-cell {
+  background-color: #282828; /* Slightly lighter dark for header */
+  font-weight: 600;
+  text-align: center;
+  color: #e0e0e0;
+  padding: 12px 0;
+  box-sizing: border-box;
+}
+
+/* First column (Employee Name) */
+.name-cell {
+  min-width: 150px;
+  max-width: 150px;
+  padding: 12px 10px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis; /* Shorten lengthy text with ellipsis */
+  color: #f5f5f5;
+  box-sizing: border-box;
+  /* Removed sticky positioning */
+  /* removed z-index */
+  /* Ensure no border radius on the sticky name column */
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+.name-cell .employee-name-short {
+  /* Added subtle style for shortened name text */
+  font-weight: bold;
+  color: #a0a0a0; /* Slightly desaturated color for distinction */
+  /* You can add more styles here, e.g., font-size, letter-spacing */
+}
+
+
+.calendar-header .name-cell {
+  background-color: #282828; /* Matches header cell background */
+  /* Removed z-index */
+}
+
+/* Day cells (Date numbers in header) */
+.day-cell {
+  min-width: 40px;
+  max-width: 40px;
+  text-align: center;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.day-cell.weekend {
+  color: #aaa; /* Slightly lighter grey for weekend dates */
+}
+
+/* Event Cells (Individual day squares in the grid body) */
+.event-cell {
+  min-width: 40px;
+  max-width: 40px;
+  height: 40px; /* Fixed height for visual consistency */
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden; /* Crucial for layers and border-radius */
+  box-sizing: border-box;
+}
+
+.date-number {
+  position: absolute; /* Positioned absolutely within the cell */
+  z-index: 100; /* Highest z-index to always be on top of all layers */
+  font-size: 0.9rem;
+  color: #f5f5f5; /* Light color for date numbers */
+  pointer-events: none; /* Allows clicks to pass through to underlying event layers */
+}
+
+/* Event Layers Container */
+.event-layers {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+/* Individual Event Layer (the colored blocks) */
+.event-layer {
+  position: absolute; /* Allows layers to overlap */
+  top: 0;
+  left: 0;
+  width: 100%; /* Fill the entire cell */
+  height: 100%; /* Fill the entire cell */
+  transition: border-radius 0.1s ease-out; /* Smooth transition for rounded corners */
+}
+
+/* Loading and Error States */
+.calendar-loading,
+.calendar-error,
+.calendar-empty {
+  padding: 40px;
+  text-align: center;
+  font-size: 1.1rem;
+  color: #1DA1F2;
+}
+
+.calendar-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.spinner {
+  width: 30px;
+  height: 30px;
+  border: 3px solid rgba(255, 255, 255, 0.2); /* Lighter spinner border */
+  border-radius: 50%;
+  border-top-color: #3498db; /* Blue spinner top */
+  animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
   }
-  
-  .team-calendar-navigation {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1rem;
-  }
-  
-  .team-calendar-navigation button {
-    background-color: #444;
-    color: #fff;
-    border: none;
-    padding: 0.4rem 0.8rem;
-    border-radius: 5px;
-    cursor: pointer;
-  }
-  
-  .team-calendar-navigation span {
-    font-size: 1.2rem;
-    font-weight: bold;
-  }
-  
-  .calendar-scroll-wrapper {
-    overflow-x: auto;
-  }
-  
-  .calendar-content-wrapper {
-    display: inline-block;
-    min-width: 100%;
-  }
-  
-  .keka-calendar-header {
-    display: flex;
-    overflow-x: auto;
-  }
-  
-  .keka-calendar-body {
-    display: flex;
-    flex-direction: column;
-    gap: 6px; /* spacing between member rows */
-  }
-  
-  .keka-empty-cell {
-    width: 150px;
-    min-width: 150px;
-    background-color: #222;
-    padding: 0.5rem;
-    font-weight: bold;
-    flex-shrink: 0;
-  }
-  
-  .keka-member-name {
-    width: 150px;
-    min-width: 150px;
-    background-color: #222;
-    color: #ffde59;
-    padding: 0.5rem;
-    font-weight: bold;
-    flex-shrink: 0;
-  }
-  
-  .keka-day-cell {
-    width: 40px;
-    min-width: 40px;
-    height: 40px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    flex-shrink: 0;
-    background-color: #1e1e1e;
-    position: relative;
-  }
-  
-  .keka-day-cell.weekend-day {
-    background-color: #2e2e2e;
-  }
-  
-  .day-number {
-    font-size: 0.65rem;
-    color: #ccc;
-  }
-  
-  .day-of-week {
-    font-size: 0.65rem;
-    color: #aaa;
-  }
-  
-  .keka-member-row {
-    display: flex;
-    /* Removed border */
-    padding-bottom: 4px; /* bottom spacing to visually separate rows */
-  }
-  
-  .event-block-wrapper {
-    width: 100%;
-    height: 100%;
-    font-size: 0.75rem;
-    font-weight: bold;
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  
-/* Increased border-radius to 10px for all event types */
-.continuous-start {
-    border-top-left-radius: 50%;
-    border-bottom-left-radius: 50%;
-  }
-  
-  .continuous-end {
-    border-top-right-radius: 50%;
-    border-bottom-right-radius: 50%;
-  }
-  
-  .continuous-mid {
-    border-radius: 0; /* keep this flat for in-between blocks */
-  }
-  
-  .single-day-event {
-    border-radius: 50%;
-  }
-  
-  .empty-day-number {
-    font-size: 0.75rem;
-    color: #555;
-  }
-  
-  .calendar-message,
-  .calendar-message-inline {
-    text-align: center;
-    padding: 1rem;
-    color: #ffde59;
-    font-size: 1rem;
-  }
-  
-  .calendar-error {
-    color: red;
-  }
-  
-  .keka-legend {
-    margin-top: 1rem;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-  }
-  
-  .legend-item {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    font-size: 0.85rem;
-    color: #eee;
-  }
-  
-  .legend-color-box {
-    width: 15px;
-    height: 15px;
-    border-radius: 3px;
-    display: inline-block;
-  }
-  
+}
+
+.calendar-error {
+  color: #ff6b6b; /* Soft red for errors */
+}
+
+.calendar-error button {
+  margin-top: 10px;
+  padding: 8px 16px;
+  background-color: #ff6b6b;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+/* Legend */
+.calendar-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  margin-top: 20px;
+  padding: 10px 0;
+  color: #f5f5f5;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+}
+
+.legend-color {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px; /* Default for legend swatches */
+  display: inline-block;
+}

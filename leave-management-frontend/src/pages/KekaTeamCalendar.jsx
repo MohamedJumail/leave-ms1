@@ -1,177 +1,327 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import moment from 'moment';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 import '../styles/TeamCalendar.css';
 
 const eventTypeColors = {
-  "Holiday": 'rgba(255, 215, 0, 0.6)',
-  "Weekly off": 'rgba(75, 75, 75, 0.8)',
-  "Casual leave": 'rgba(70, 130, 180, 0.6)',
-  "Sick leave": 'rgba(255, 99, 71, 0.6)',
-  "Earned leave": 'rgba(138, 43, 226, 0.6)',
-  "Default Leave": 'rgba(220, 20, 60, 0.6)',
-};
-
-const eventTypeLabels = {
-  "Holiday": "Holiday",
-  "Weekly off": "Weekly Off",
-  "Casual leave": "Casual Leave",
-  "Sick leave": "Sick Leave",
-  "Earned leave": "Earned Leave",
+  // Using solid base colors; opacity will be applied via 'opacity' property in layers
+  "Holiday": 'rgba(255, 215, 0, 1)',   // Gold base
+  "Weekly off": 'rgba(192, 192, 192, 1)', // Silver base for Weekly Off
+  "Casual leave": 'rgba(70, 130, 180, 1)', // Steel Blue base
+  "Sick leave": 'rgba(255, 99, 71, 1)',   // Tomato base
+  "Work from home": 'rgba(106, 168, 79, 1)', // Olive Green base
 };
 
 const KekaTeamCalendar = () => {
   const { token } = useAuth();
-  const [currentDate, setCurrentDate] = useState(new Date());
-  const [teamCalendarData, setTeamCalendarData] = useState([]);
-  const [globalHolidays, setGlobalHolidays] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
-  const month = moment(currentDate).month() + 1;
-  const year = moment(currentDate).year();
-
-  const fetchTeamCalendarData = useCallback(async () => {
-    if (!token) return;
-    setLoading(true);
-    try {
-      const res = await api.get(`/api/team-calendar?month=${month}&year=${year}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      const data = res.data;
-
-      const processed = data.teamCalendarData.map(member => {
-        const dayMap = {};
-        let hasEvents = false;
-        member.events.forEach((eventData, index) => {
-          const day = index + 1;
-          if (eventData) {
-            dayMap[day] = { type: eventData.type };
-            if (eventData.type !== 'Weekly off') hasEvents = true;
-          }
-        });
-        return {
-          id: member.id,
-          name: member.name,
-          events: dayMap,
-          hasActualEventsInMonth: hasEvents
-        };
-      }).filter(m => m.hasActualEventsInMonth);
-
-      setTeamCalendarData(processed);
-      setGlobalHolidays(data.holidays || []);
-    } catch (err) {
-      setError("Failed to load team calendar. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  }, [token, month, year]);
+  const [currentMonth, setCurrentMonth] = useState(moment());
 
   useEffect(() => {
-    fetchTeamCalendarData();
-  }, [fetchTeamCalendarData]);
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        // Request month + 1 because moment.month() is 0-indexed
+        const res = await api.get(`/api/team-calendar?month=${currentMonth.month() + 1}&year=${currentMonth.year()}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        // The data received here will already be filtered by the backend
+        setData(res.data);
+      } catch (err) {
+        setError(err.response?.data?.message || 'Failed to load calendar data');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, [token, currentMonth]); // Re-fetch when token or month changes
 
-  const handleMonthChange = (dir) => {
-    const newDate = moment(currentDate).add(dir === 'next' ? 1 : -1, 'month').toDate();
-    setCurrentDate(newDate);
+  const generateDaysInMonth = () => {
+    const daysCount = currentMonth.daysInMonth();
+    return Array.from({ length: daysCount }, (_, i) =>
+      moment(currentMonth).date(i + 1)
+    );
   };
 
-  const numDaysInMonth = moment(`${year}-${month}`, 'YYYY-MM').daysInMonth();
-  const daysArray = Array.from({ length: numDaysInMonth }, (_, i) => i + 1);
-  const getDayOfWeek = (d) => moment(`${year}-${month}-${d}`, 'YYYY-MM-DD').format('dd');
-  const isWeekend = (d) => [0, 6].includes(moment(`${year}-${month}-${d}`).day());
-  const getHolidayName = (d) => {
-    const dateStr = moment(`${year}-${month}-${d}`).format('YYYY-MM-DD');
-    const holiday = globalHolidays.find(h => moment(h.date).format('YYYY-MM-DD') === dateStr);
-    return holiday?.name || null;
+  const getEventLayers = (events, dayIndex) => {
+    const layers = [];
+    const date = moment(currentMonth).date(dayIndex + 1);
+
+    // --- Determine existence and start/end status of higher-priority events ---
+    // Ensure data.holidays is available before trying to find a holiday
+    const currentDayHoliday = data?.holidays?.find(holiday => moment(holiday.date).isSame(date, 'day'));
+    const isHolidayPresent = !!currentDayHoliday;
+
+    // Check for holiday continuity for borderRadius logic.
+    // Note: This needs to check holidays within the currently fetched 'data.holidays' array,
+    // which should already be filtered for the month by the backend.
+    const isPrevHoliday = data?.holidays?.some(h => moment(h.date).isSame(date.clone().subtract(1, 'day'), 'day'));
+    const isNextHoliday = data?.holidays?.some(h => moment(h.date).isSame(date.clone().add(1, 'day'), 'day'));
+
+    const currentDayLeave = events?.[dayIndex]; // events array is 0-indexed for days
+    const isLeavePresent = currentDayLeave && ["Casual leave", "Sick leave", "Work from home"].includes(currentDayLeave.type);
+
+    // --- Weekly Off (Saturday or Sunday) Layer ---
+    // Z-index: 1 (Lowest)
+    if (date.day() === 0 || date.day() === 6) { // 0 for Sunday, 6 for Saturday
+      let woffCalculatedBorderRadius = '0'; // Border radius based on WOFF continuity
+
+      // Check continuity for WOFFs to apply corner radius when alone
+      const prevDay = moment(date).subtract(1, 'day');
+      const nextDay = moment(date).add(1, 'day');
+      const isPrevWoff = (prevDay.day() === 0 || prevDay.day() === 6) && prevDay.month() === currentMonth.month();
+      const isNextWoff = (nextDay.day() === 0 || nextDay.day() === 6) && nextDay.month() === currentMonth.month();
+
+      const isStartOfWoffBlock = !isPrevWoff;
+      const isEndOfWoffBlock = !isNextWoff;
+      const isSingleDayWoff = isStartOfWoffBlock && isEndOfWoffBlock;
+
+      if (isSingleDayWoff) {
+        woffCalculatedBorderRadius = '50%';
+      } else if (isStartOfWoffBlock) {
+        woffCalculatedBorderRadius = '50% 0 0 50%';
+      } else if (isEndOfWoffBlock) {
+        woffCalculatedBorderRadius = '0 50% 50% 0';
+      }
+
+      // --- WOFF Overlap Logic ---
+      let finalWoffOpacity;
+      // The change is here: finalWoffBorderRadius will always be woffCalculatedBorderRadius
+      const finalWoffBorderRadius = woffCalculatedBorderRadius;
+
+      // Check if current day is a boundary for an overlapping Holiday/Leave
+      const isHolidayBoundaryOnThisDay = isHolidayPresent && (
+        !isPrevHoliday || !isNextHoliday // If it's a start or end of a holiday block
+      );
+      const isLeaveBoundaryOnThisDay = isLeavePresent && (
+        !events?.[dayIndex - 1] || events?.[dayIndex - 1].type !== currentDayLeave.type || // Is start
+        !events?.[dayIndex + 1] || events?.[dayIndex + 1].type !== currentDayLeave.type // Is end
+      );
+
+      if (isHolidayBoundaryOnThisDay || isLeaveBoundaryOnThisDay) {
+        // Condition 1: WOFF is a boundary for an overlapping Holiday/Leave
+        finalWoffOpacity = 0.9; // Very bright
+      } else if (isHolidayPresent || isLeavePresent) {
+        // Condition 2: WOFF is covered by the "middle" of an overlapping Holiday/Leave
+        finalWoffOpacity = 0.8; // Good bright
+      } else {
+        // Condition 3: WOFF is alone (no overlap)
+        finalWoffOpacity = 0.5; // Default bright
+      }
+
+      layers.push({
+        type: 'Weekly off',
+        color: eventTypeColors["Weekly off"], // Always silver
+        zIndex: 1, // Lowest z-index
+        opacity: finalWoffOpacity,
+        borderRadius: finalWoffBorderRadius, // Apply final border radius
+      });
+    }
+
+    // --- Holiday Layer ---
+    // Z-index: 2 (Middle)
+    if (isHolidayPresent) {
+      let holidayBorderRadius = '0';
+      // Check for continuity of holidays to apply corner radius
+      const isPrevHoliday = data.holidays.some(h => moment(h.date).isSame(date.clone().subtract(1, 'day'), 'day'));
+      const isNextHoliday = data.holidays.some(h => moment(h.date).isSame(date.clone().add(1, 'day'), 'day'));
+
+      const isStartOfHolidayBlock = !isPrevHoliday;
+      const isEndOfHolidayBlock = !isNextHoliday;
+      const isSingleDayHoliday = isStartOfHolidayBlock && isEndOfHolidayBlock;
+
+      if (isSingleDayHoliday) {
+        holidayBorderRadius = '50%';
+      } else if (isStartOfHolidayBlock) {
+        holidayBorderRadius = '50% 0 0 50%';
+      } else if (isEndOfHolidayBlock) {
+        holidayBorderRadius = '0 50% 50% 0';
+      }
+
+      // Opacity Logic for Holiday:
+      // Dim if overlapped by a Leave, bright if alone or only overlapping WOFF.
+      const holidayOpacity = isLeavePresent ? 0.25 : 0.75; // More dim if overlapped by leave, bright if alone/dominating
+
+      layers.push({
+        type: 'Holiday',
+        color: eventTypeColors["Holiday"],
+        name: currentDayHoliday.name, // Use the found holiday's name
+        zIndex: 2, // Middle z-index
+        opacity: holidayOpacity,
+        borderRadius: holidayBorderRadius,
+      });
+    }
+
+    // --- Leave Events (Casual, Sick, WFH) Layer ---
+    // Z-index: 3 (Highest)
+    if (isLeavePresent) {
+      let leaveBorderRadius = '0';
+      // Check for continuity of leaves to apply corner radius
+      const prevDayLeave = events?.[dayIndex - 1];
+      const nextDayLeave = events?.[dayIndex + 1];
+
+      const isStartOfContinuousLeave = !prevDayLeave || prevDayLeave.type !== currentDayLeave.type;
+      const isEndOfContinuousLeave = !nextDayLeave || nextDayLeave.type !== currentDayLeave.type;
+      const isSingleDayLeave = isStartOfContinuousLeave && isEndOfContinuousLeave;
+
+      if (isSingleDayLeave) {
+        leaveBorderRadius = '50%'; // 50% for single leave
+      } else if (isStartOfContinuousLeave) {
+        leaveBorderRadius = '50% 0 0 50%';
+      } else if (isEndOfContinuousLeave) {
+        leaveBorderRadius = '0 50% 50% 0';
+      }
+
+      // Opacity Logic for Leaves:
+      // Leaves are the highest priority. They are always VERY DIM, whether alone or overlapping.
+      const leaveOpacity = 0.4; // Very dim
+
+      layers.push({
+        type: currentDayLeave.type,
+        color: eventTypeColors[currentDayLeave.type] || 'transparent',
+        zIndex: 3, // Highest z-index
+        opacity: leaveOpacity,
+        borderRadius: leaveBorderRadius,
+      });
+    }
+
+    // Sort layers by z-index to ensure correct visual stacking (lowest z-index drawn first)
+    return layers.sort((a, b) => a.zIndex - b.zIndex);
   };
 
-  const getCellType = (member, day) => {
-    const holiday = getHolidayName(day);
-    if (holiday) return 'Holiday';
-    if (isWeekend(day)) return 'Weekly off';
-    return member.events[day]?.type || null;
+  const handleMonthChange = (months) => {
+    setCurrentMonth(moment(currentMonth).add(months, 'months'));
   };
 
-  if (loading) return <div className="calendar-message">Loading team calendar...</div>;
-  if (error) return <div className="calendar-message calendar-error">{error}</div>;
+  if (loading) return (
+    <div className="calendar-loading">
+      <div className="spinner"></div>
+      Loading calendar data...
+    </div>
+  );
 
+  if (error) return (
+    <div className="calendar-error">
+      <p>{error}</p>
+      <button onClick={() => window.location.reload()}>Retry</button>
+    </div>
+  );
+
+  const daysInMonth = generateDaysInMonth();
+
+  // --- Conditional Rendering for Empty Team Calendar Data ---
+  if (!data || !data.teamCalendarData || data.teamCalendarData.length === 0) {
+    return (
+      <div className="keka-calendar-container">
+        <div className="calendar-controls">
+          <button onClick={() => handleMonthChange(-1)}>&lt; Previous</button>
+          <h2>{currentMonth.format('MMMM YYYY')}</h2>
+          <button onClick={() => handleMonthChange(1)}>Next &gt;</button>
+        </div>
+        <div className="calendar-empty">
+          <p>No team members have recorded events leaves for {currentMonth.format('MMMM YYYY')}.</p>
+        </div>
+        {/* Still display the legend even if no team members are shown */}
+        <div className="calendar-legend">
+          {["Weekly off", "Holiday", "Casual leave", "Sick leave", "Work from home"].map(type => (
+            eventTypeColors[type] && (
+              <div key={type} className="legend-item">
+                <span
+                  className="legend-color"
+                  style={{
+                    backgroundColor: eventTypeColors[type],
+                    opacity: type === "Weekly off" ? 0.5 : type === "Holiday" ? 0.75 : 0.4,
+                    borderRadius: '50%',
+                  }}
+                ></span>
+                <span>{type}</span>
+              </div>
+            )
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // --- Normal rendering when data.teamCalendarData is not empty ---
   return (
-    <div className="keka-team-calendar-container">
-      <div className="team-calendar-navigation">
-        <button onClick={() => handleMonthChange('prev')}>&lt; Prev</button>
-        <span>{moment(currentDate).format('MMMM YYYY')}</span>
-        <button onClick={() => handleMonthChange('next')}>Next &gt;</button>
+    <div className="keka-calendar-container">
+      <div className="calendar-controls">
+        <button onClick={() => handleMonthChange(-1)}>&lt; Previous</button>
+        <h2>{currentMonth.format('MMMM YYYY')}</h2>
+        <button onClick={() => handleMonthChange(1)}>Next &gt;</button>
       </div>
 
-      <div className="calendar-scroll-wrapper">
-        <div className="calendar-content-wrapper">
-          <div className="keka-calendar-header">
-            <div className="keka-empty-cell">Team Member</div>
-            {daysArray.map(day => (
-              <div key={`day-${day}`} className="keka-day-cell">
-                <div className="day-of-week">{getDayOfWeek(day)}</div>
+      <div className="team-calendar">
+        <div className="calendar-header">
+          <div className="name-cell header-cell">Employee</div>
+          {daysInMonth.map((day, index) => (
+            <div
+              key={index}
+              className={`day-cell header-cell ${day.day() === 0 || day.day() === 6 ? 'weekend' : ''}`}
+            >
+              {day.format('D')}
+            </div>
+          ))}
+        </div>
+
+        <div className="calendar-body">
+          {data.teamCalendarData.map(member => (
+            <div key={member.id} className="calendar-row">
+              <div className="name-cell" title={member.name}>
+                {member.name}
               </div>
-            ))}
-          </div>
+              {daysInMonth.map((day, index) => {
+                const layers = getEventLayers(member.events, index);
+                const dateNumber = day.date();
 
-          <div className="keka-calendar-body">
-            {teamCalendarData.length === 0 ? (
-              <div className="calendar-message-inline">No team members with events found for this month.</div>
-            ) : teamCalendarData.map(member => (
-              <div key={member.id} className="keka-member-row">
-                <div className="keka-member-name">{member.name}</div>
-                {daysArray.map(day => {
-                  const cellType = getCellType(member, day);
-                  const tooltip = cellType === 'Holiday'
-                    ? `Holiday: ${getHolidayName(day)}`
-                    : cellType === 'Weekly off'
-                    ? 'Weekly Off'
-                    : cellType
-                    ? `${member.name} - ${eventTypeLabels[cellType] || cellType}`
-                    : '';
-
-                  const color = eventTypeColors[cellType] || null;
-
-                  const prevType = getCellType(member, day - 1);
-                  const nextType = getCellType(member, day + 1);
-
-                  let blockClass = '';
-                  if (cellType && prevType !== cellType && nextType === cellType) blockClass = 'continuous-start';
-                  else if (cellType && prevType === cellType && nextType !== cellType) blockClass = 'continuous-end';
-                  else if (cellType && prevType === cellType && nextType === cellType) blockClass = 'continuous-mid';
-                  else if (cellType) blockClass = 'single-day-event';
-
-                  return (
-                    <div
-                      key={`${member.id}-${day}`}
-                      className={`keka-day-cell member-day-cell`}
-                      title={tooltip}
-                    >
-                      {cellType ? (
-                        <div className={`event-block-wrapper ${blockClass}`} style={{ backgroundColor: color }}>
-                          <span className="day-number-inside">{day}</span>
-                        </div>
-                      ) : (
-                        <div className="empty-day-number">{day}</div>
-                      )}
+                return (
+                  <div
+                    key={index}
+                    className="event-cell"
+                    title={layers.map(l => l.type).join(' + ')}
+                  >
+                    <div className="date-number">{dateNumber}</div>
+                    <div className="event-layers">
+                      {layers.map((layer, i) => (
+                        <div
+                          key={i}
+                          className="event-layer"
+                          style={{
+                            backgroundColor: layer.color,
+                            zIndex: layer.zIndex,
+                            opacity: layer.opacity,
+                            borderRadius: layer.borderRadius,
+                          }}
+                        />
+                      ))}
                     </div>
-                  );
-                })}
-              </div>
-            ))}
-          </div>
+                  </div>
+                );
+              })}
+            </div>
+          ))}
         </div>
       </div>
 
-      <div className="keka-legend">
-        {Object.entries(eventTypeLabels).map(([key, label]) => (
-          <div key={key} className="legend-item">
-            <span className="legend-color-box" style={{ backgroundColor: eventTypeColors[key] }}></span>
-            {label}
-          </div>
+      <div className="calendar-legend">
+        {["Weekly off", "Holiday", "Casual leave", "Sick leave", "Work from home"].map(type => (
+          eventTypeColors[type] && (
+            <div key={type} className="legend-item">
+              <span
+                className="legend-color"
+                style={{
+                  backgroundColor: eventTypeColors[type],
+                  opacity: type === "Weekly off" ? 0.5 : type === "Holiday" ? 0.75 : 0.4,
+                  borderRadius: '50%',
+                }}
+              ></span>
+              <span>{type}</span>
+            </div>
+          )
         ))}
       </div>
     </div>
