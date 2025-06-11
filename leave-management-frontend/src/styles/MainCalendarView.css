@@ -1,0 +1,98 @@
+/* src/styles/MainCalendarView.css */
+
+.main-calendar-container {
+    padding: 20px;
+    /* Transparent background */
+    background-color: rgba(0, 0, 0, 0); /* Completely transparent */
+    /* background-color: rgba(255, 255, 255, 0.1); Slightly translucent dark background */
+    border-radius: 8px;
+    box-shadow: none; /* Remove outer shadow for a more integrated look */
+    color: #e0e0e0; /* Light text color for dark mode */
+}
+
+.calendar-header-section {
+    margin-bottom: 25px;
+    display: flex;
+    justify-content: center; /* Center the toggle buttons */
+    align-items: center;
+}
+
+.calendar-type-toggle {
+    display: flex;
+    gap: 15px; /* Space between buttons */
+}
+
+.toggle-button {
+    padding: 12px 25px;
+    font-size: 1.05rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: 2px solid #6272a4; /* A soft, dark blue border */
+    border-radius: 30px; /* More rounded, pill-shaped buttons */
+    background-color: #282a36; /* Darker background for buttons */
+    color: #f8f8f2; /* Light text color */
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3); /* Subtle shadow for depth */
+}
+
+.toggle-button:hover {
+    background-color: #44475a; /* Lighter dark blue on hover */
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+    transform: translateY(-2px); /* Slight lift on hover */
+}
+
+.toggle-button.active {
+    background-color: #8be9fd; /* Bright blue for active state */
+    color: #282a36; /* Dark text for active button */
+    border-color: #8be9fd; /* Matching border color */
+    box-shadow: 0 6px 12px rgba(139, 233, 253, 0.3); /* Glow effect for active button */
+    transform: translateY(-1px); /* Slight lift */
+}
+
+/* Ensure the main content area respects the transparency of the parent */
+.calendar-main-content {
+    background-color: inherit; /* Inherit transparency */
+    padding: 10px 0; /* Adjust padding as needed */
+}
+
+/* If KekaTeamCalendar and Calendar components have their own backgrounds,
+   you might need to adjust them to fit the dark transparent theme.
+   For example, if they have a default white background, you'd make it dark. */
+
+/* Example for nested components (adjust as per your actual component styles) */
+/* Assuming Calendar and KekaTeamCalendar might have a default background */
+.calendar-main-content > .calendar,
+.calendar-main-content > .keka-team-calendar { /* Assuming these are class names for your sub-components */
+    background-color: #282a36; /* Dark background for the calendar content */
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+/* If you still have navigation elements within KekaTeamCalendar that need dark mode styling */
+.team-calendar-navigation { /* This selector assumes this class is applied inside KekaTeamCalendar */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 15px;
+    gap: 20px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #f8f8f2; /* Light text for navigation */
+}
+
+.team-calendar-navigation button {
+    background-color: #44475a; /* Darker grey for navigation buttons */
+    color: #f8f8f2; /* Light text */
+    border: none;
+    padding: 10px 18px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.team-calendar-navigation button:hover {
+    background-color: #6272a4; /* Slightly lighter dark blue on hover */
+    transform: translateY(-1px);
+}

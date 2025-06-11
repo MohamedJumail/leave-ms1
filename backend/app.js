@@ -1,6 +1,7 @@
 // app.js
 require("dotenv").config();
 const Hapi = require("@hapi/hapi");
+const teamCalendarRoutes = require("./routes/teamCalendarRoutes");
 
 const init = async () => {
   const server = Hapi.server({
@@ -31,6 +32,9 @@ const init = async () => {
 
   const leaveRequestRoutes = require('./routes/leaveRequestRoutes');
   server.route(leaveRequestRoutes);
+  
+  const teamCalendarRoutes = require('./routes/teamCalendarRoutes');
+  server.route(teamCalendarRoutes);
   
   return server;
 };

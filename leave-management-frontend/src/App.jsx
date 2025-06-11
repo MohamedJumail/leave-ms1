@@ -11,7 +11,7 @@ import LeaveTypes from "./pages/LeaveTypes";
 import LeaveApproval from "./pages/LeaveApproval";
 import ViewProfile from "./pages/ViewProfile";
 import Holiday from "./pages/Holiday";
-import Calendar from "./pages/Calendar";
+import MainCalendarView from "./pages/MainCalendarView"; // Import the new MainCalendarView
 import Leave from "./pages/Leave";
 import CommonLayout from './layouts/CommonLayout';
 import ManageUsersAdmin from "./pages/ManageUsersAdmin";
@@ -33,7 +33,7 @@ const App = () => {
           <Route path="leave-approvals" element={<LeaveApproval />} />
           <Route path="profile" element={<ViewProfile />} />
           <Route path="holiday" element={<Holiday />} />
-          <Route path="calendar" element={<Calendar />} />
+          <Route path="calendar" element={<MainCalendarView />} />
           <Route path="leave-request" element={<Leave />} />
 
           {/* Catch-all redirect */}
