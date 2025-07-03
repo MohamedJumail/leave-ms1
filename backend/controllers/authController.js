@@ -9,7 +9,7 @@ const setUserLeaveBalancesForUser = async (userId) => {
   const types = await getAllLeaveTypes();
 
   for (const type of types) {
-    await insertLeaveBalance(userId, type.id, type.max_days);
+    await insertLeaveBalance(userId, type.id, type.monthly_accrual);
   }
 };
 

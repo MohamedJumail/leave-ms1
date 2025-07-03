@@ -1,8 +1,15 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useAuth } from "../context/AuthContext";
 import api from "../services/api";
 import '../styles/Leave.css';
-import LeaveStatusModal from '../components/LeaveStatusModal'; // Import the new modal
+import LeaveStatusModal from '../components/LeaveStatusModal';
+import LeaveHistory from '../components/LeaveHistory'; 
+import { FULL_DAY, FIRST_HALF, SECOND_HALF } from '../constants/leaveTypes'; 
+const HALF_DAY_MAP = {
+    [FULL_DAY]: 'Full Day',
+    [FIRST_HALF]: 'First Half ',
+    [SECOND_HALF]: 'Second Half',
+};
 
 const Leave = () => {
     const { token } = useAuth();
@@ -12,59 +19,62 @@ const Leave = () => {
     const [leaveBalances, setLeaveBalances] = useState([]);
     const [loading, setLoading] = useState(true);
     const [historyVisible, setHistoryVisible] = useState(false);
-    const [error, setError] = useState("");
+
+    const [formErrors, setFormErrors] = useState({});
+    const [apiMessage, setApiMessage] = useState("");
+
     const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
     const [selectedLeaveId, setSelectedLeaveId] = useState(null);
     const [leaveStatusDetails, setLeaveStatusDetails] = useState(null);
-    const [workingDays, setWorkingDays] = useState(0);
+    const [calculatedLeaveDays, setCalculatedLeaveDays] = useState(0);
 
     const [formData, setFormData] = useState({
         leave_type_id: "",
         start_date: "",
         end_date: "",
         reason: "",
+        start_half_day_type: FULL_DAY,
+        end_half_day_type: FULL_DAY,
     });
 
-    const [historyFilter, setHistoryFilter] = useState("All");
+    const isSingleDayLeave = formData.start_date && formData.end_date &&
+                             new Date(formData.start_date).getTime() === new Date(formData.end_date).getTime();
 
-    const fetchLeaveTypes = async () => {
+    const fetchLeaveTypes = useCallback(async () => {
         try {
             const response = await api.get("/api/leave-types", {
                 headers: { Authorization: `Bearer ${token}` },
             });
-            console.log("Leave Types Fetched:", response.data);
             setLeaveTypes(response.data);
         } catch (err) {
             console.error("Error fetching leave types:", err);
-            setError("Failed to load leave types");
+            setApiMessage("Failed to load leave types.");
         }
-    };
+    }, [token]);
 
-    const fetchLeaves = async () => {
+    const fetchLeaves = useCallback(async () => {
         try {
             const response = await api.get("/api/leave/my-requests", {
                 headers: { Authorization: `Bearer ${token}` },
             });
-            console.log("Leaves Fetched:", response.data);
             setLeaves(response.data);
         } catch (err) {
             console.error("Error fetching leaves:", err);
-            setError("Failed to load leave data");
+            setApiMessage("Failed to load leave data.");
         }
-    };
+    }, [token]);
 
-    const fetchLeaveBalances = async () => {
+    const fetchLeaveBalances = useCallback(async () => {
         try {
             const response = await api.get("/api/leave-balances", {
                 headers: { Authorization: `Bearer ${token}` },
             });
-            console.log("Leave Balances Fetched:", response.data);
             setLeaveBalances(response.data);
         } catch (err) {
             console.error("Error fetching leave balances:", err);
-            setError("Failed to load leave balances");
+            setApiMessage("Failed to load leave balances.");
         }
-    };
+    }, [token]);
 
     const fetchLeaveStatus = async (leaveId) => {
         setSelectedLeaveId(leaveId);
@@ -75,29 +85,142 @@ const Leave = () => {
             const response = await api.get(`/api/leave/status/${leaveId}`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
-            console.log(`Leave Status for ID ${leaveId}:`, response.data);
             setLeaveStatusDetails(response.data);
         } catch (error) {
             console.error("Error fetching leave status:", error);
-            setError("Failed to load leave status");
+            setApiMessage("Failed to load leave status.");
             setLeaveStatusDetails([]);
         }
     };
 
-    const useEffectCleanup = () => {
-        setLeaves([]);
-        setLeaveTypes([]);
-        setLeaveBalances([]);
-        setLoading(true);
-        setError("");
-        setHistoryVisible(false);
-        setFormData({ leave_type_id: "", start_date: "", end_date: "", reason: "" });
-        setHistoryFilter("All");
-        setIsStatusModalOpen(false);
-        setSelectedLeaveId(null);
-        setLeaveStatusDetails(null);
-        setWorkingDays(0);
+    const calculateFrontendLeaveDuration = useCallback((startDateStr, endDateStr, startHalfDay, endHalfDay) => {
+        let currentErrors = {};
+        let calculatedDays = 0;
+
+        if (!startDateStr || !endDateStr) {
+            return { days: 0, errors: currentErrors };
+        }
+
+        const start = new Date(startDateStr);
+        const end = new Date(endDateStr);
+        start.setHours(0, 0, 0, 0);
+        end.setHours(0, 0, 0, 0);
+
+        if (start > end) {
+            currentErrors.end_date = "Start date cannot be after end date.";
+            return { days: 0, errors: currentErrors };
+        }
+
+        let numDays = 0;
+
+        if (start.getTime() === end.getTime()) {
+            if (startHalfDay === FULL_DAY && endHalfDay === FULL_DAY) {
+                numDays = 1.0;
+            } else if (startHalfDay === FIRST_HALF && endHalfDay === SECOND_HALF) {
+                numDays = 1.0;
+            } else if (startHalfDay === SECOND_HALF && endHalfDay === FIRST_HALF) {
+                currentErrors.end_half_day_type = "For a single day, 'End Half-Day' cannot be 'First Half' if 'Start Half-Day' is 'Second Half'.";
+                return { days: 0, errors: currentErrors };
+            } else if (startHalfDay === FIRST_HALF || startHalfDay === SECOND_HALF) {
+                numDays = 0.5;
+            }
+            if (startHalfDay === FULL_DAY && endHalfDay !== FULL_DAY) {
+                currentErrors.start_half_day_type = "For a single day, if 'Full Day' is selected, both start and end half-day types must be 'Full Day'.";
+                return { days: 0, errors: currentErrors };
+            }
+        } else {
+            let currentDate = new Date(start);
+            while (currentDate <= end) {
+                const dayOfWeek = currentDate.getDay();
+                if (dayOfWeek !== 0 && dayOfWeek !== 6) { // Exclude weekends
+                    numDays++;
+                }
+                currentDate.setDate(currentDate.getDate() + 1);
+            }
+
+            if (startHalfDay === SECOND_HALF) {
+                numDays -= 0.5;
+            }
+            if (endHalfDay === FIRST_HALF) {
+                numDays -= 0.5;
+            }
+        }
+        calculatedDays = Math.max(0, numDays);
+        return { days: calculatedDays, errors: currentErrors };
+    }, []);
+
+    const handleFormChange = (e) => {
+        const { name, value } = e.target;
+        let updatedFormData = { ...formData, [name]: value };
+
+        setFormErrors(prevErrors => ({ ...prevErrors, [name]: '', general: '' }));
+        setApiMessage("");
+
+        if (name === 'start_half_day_type' || name === 'end_half_day_type') {
+            updatedFormData = { ...updatedFormData, [name]: parseInt(value, 10) };
+        }
+
+        const newStartDate = name === 'start_date' ? value : formData.start_date;
+        const newEndDate = name === 'end_date' ? value : formData.end_date;
+        const potentialIsSingleDayLeave = newStartDate && newEndDate &&
+                                          new Date(newStartDate).getTime() === new Date(newEndDate).getTime();
+
+        if (name === 'start_date' || name === 'end_date') {
+            setFormErrors(prevErrors => ({ ...prevErrors, start_date: '', end_date: '' }));
+
+            if (potentialIsSingleDayLeave) {
+                updatedFormData.start_half_day_type = FULL_DAY;
+                updatedFormData.end_half_day_type = FULL_DAY;
+            } else {
+                if (isSingleDayLeave) { 
+                    updatedFormData.start_half_day_type = FULL_DAY;
+                    updatedFormData.end_half_day_type = FULL_DAY;
+                }
+            }
+        }
+
+        if (potentialIsSingleDayLeave && name === 'start_half_day_type') {
+            updatedFormData.end_half_day_type = parseInt(value, 10);
+            setFormErrors(prevErrors => ({ ...prevErrors, start_half_day_type: '', end_half_day_type: '' }));
+        } else if (!potentialIsSingleDayLeave && (name === 'start_half_day_type' || name === 'end_half_day_type')) {
+             setFormErrors(prevErrors => ({ ...prevErrors, [name]: '' }));
+        }
+
+        setFormData(updatedFormData);
+
+        if (['start_date', 'end_date', 'start_half_day_type', 'end_half_day_type'].includes(name)) {
+            const { days, errors: calcErrors } = calculateFrontendLeaveDuration(
+                updatedFormData.start_date,
+                updatedFormData.end_date,
+                updatedFormData.start_half_day_type,
+                updatedFormData.end_half_day_type
+            );
+            setCalculatedLeaveDays(days);
+            setFormErrors(prev => ({ ...prev, ...calcErrors }));
+        }
     };
+
+    useEffect(() => {
+        if (formData.start_date && formData.end_date) {
+            const { days, errors: calcErrors } = calculateFrontendLeaveDuration(
+                formData.start_date,
+                formData.end_date,
+                formData.start_half_day_type,
+                formData.end_half_day_type
+            );
+            setCalculatedLeaveDays(days);
+            setFormErrors(prev => ({ ...prev, ...calcErrors }));
+        } else {
+            setCalculatedLeaveDays(0);
+            setFormErrors(prevErrors => ({
+                ...prevErrors,
+                start_date: '',
+                end_date: '',
+                start_half_day_type: '',
+                end_half_day_type: ''
+            }));
+        }
+    }, [formData.start_date, formData.end_date, formData.start_half_day_type, formData.end_half_day_type, calculateFrontendLeaveDuration]);
 
     useEffect(() => {
         if (token) {
@@ -109,181 +232,111 @@ const Leave = () => {
         } else {
             setLoading(false);
         }
-
-        return useEffectCleanup;
-    }, [token]);
-
-    const calculateWorkingDays = (startDate, endDate) => {
-        if (!startDate || !endDate) {
-            return 0;
-        }
-
-        const start = new Date(startDate);
-        const end = new Date(endDate);
-        let days = 0;
-        let currentDate = new Date(start);
-
-        while (currentDate <= end) {
-            const dayOfWeek = currentDate.getDay();
-            if (dayOfWeek !== 0 && dayOfWeek !== 6) { // Skip weekends (Sunday: 0, Saturday: 6)
-                days++;
-            }
-            currentDate.setDate(currentDate.getDate() + 1);
-        }
-        return days;
-    };
-
-    const handleFormChange = (e) => {
-        const { name, value } = e.target;
-        setFormData((prev) => ({
-            ...prev,
-            [name]: value,
-        }));
-
-        if (name === 'start_date' || name === 'end_date') {
-            setWorkingDays(calculateWorkingDays(
-                name === 'start_date' ? value : formData.start_date,
-                name === 'end_date' ? value : formData.end_date
-            ));
-        }
-    };
+    }, [token, fetchLeaveTypes, fetchLeaves, fetchLeaveBalances]);
 
     const submitLeaveRequest = async (e) => {
         e.preventDefault();
+        setApiMessage("");
+        setFormErrors({});
+
+        let errors = {};
+
+        if (!formData.leave_type_id) errors.leave_type_id = "Leave type is required.";
+        if (!formData.start_date) errors.start_date = "Start date is required.";
+        if (!formData.end_date) errors.end_date = "End date is required.";
+        if (!formData.reason) errors.reason = "Reason is required.";
+
+        const { days: finalCalculatedDays, errors: calcErrors } = calculateFrontendLeaveDuration(
+            formData.start_date,
+            formData.end_date,
+            formData.start_half_day_type,
+            formData.end_half_day_type
+        );
+        setCalculatedLeaveDays(finalCalculatedDays);
+
+        errors = { ...errors, ...calcErrors };
+
+        if (finalCalculatedDays <= 0 && formData.start_date && formData.end_date && Object.keys(calcErrors).length === 0) {
+            errors.general = "The selected leave period results in zero or negative working days/hours. Please check dates and half-day selections.";
+        }
+
+        const selectedLeaveType = leaveTypes.find(lt => lt.id === Number(formData.leave_type_id));
+        const selectedBalance = leaveBalances.find(b =>
+            selectedLeaveType && b.leave_type.trim().toLowerCase() === selectedLeaveType.name.trim().toLowerCase()
+        );
+
+        if (!selectedBalance) {
+            errors.leave_type_id = "Selected leave type balance not found.";
+        } else if (finalCalculatedDays > 0 && finalCalculatedDays > selectedBalance.balance) {
+            errors.leave_type_id = `Insufficient leave balance. You need ${finalCalculatedDays} days, but have ${selectedBalance.balance} days available.`;
+        }
+
+        if (Object.keys(errors).length > 0) {
+            setFormErrors(errors);
+            setApiMessage("Please correct the errors in the form.");
+            return;
+        }
 
         const formDataToSend = {
             ...formData,
             leave_type_id: Number(formData.leave_type_id),
-            number_of_days: workingDays,
         };
-
-        console.log("Submitting Leave Request with data:", formDataToSend);
 
         try {
             const response = await api.post("/api/leave/apply", formDataToSend, {
                 headers: { Authorization: `Bearer ${token}` },
             });
-            console.log("Leave Request Successful:", response.data);
-            // Replace alert with a custom modal or notification for better UX
-            // alert("Leave request submitted successfully");
+            setApiMessage(response.data.msg);
             setFormData({
                 leave_type_id: "",
                 start_date: "",
                 end_date: "",
                 reason: "",
+                start_half_day_type: FULL_DAY,
+                end_half_day_type: FULL_DAY,
             });
-            setWorkingDays(0);
+            setCalculatedLeaveDays(0);
             fetchLeaves();
             fetchLeaveBalances();
         } catch (err) {
             console.error("Error submitting leave request:", err);
             if (err.response) {
-                setError(err.response.data.msg || "Could not submit leave request");
-                console.log("Server Response:", err.response.data);
+                if (err.response.data.errors) {
+                    setFormErrors(err.response.data.errors);
+                    setApiMessage("Please correct the errors in the form.");
+                } else {
+                    setApiMessage(err.response.data.msg || err.response.data.error || "Could not submit leave request.");
+                }
             } else {
-                setError("Could not submit leave request");
+                setApiMessage("Could not submit leave request due to a network error.");
             }
         }
     };
 
     const cancelLeave = async (leaveId) => {
+        if (!window.confirm("Are you sure you want to cancel this leave request?")) {
+            return;
+        }
+        setApiMessage("");
         try {
-            await api.put(
+            const response = await api.put(
                 `/api/leave/cancel/${leaveId}`,
                 {},
                 {
                     headers: { Authorization: `Bearer ${token}` },
                 }
             );
-            setLeaves((prev) =>
-                prev.map((l) => (l.id === leaveId ? { ...l, status: "Cancelled" } : l))
-            );
+            setApiMessage(response.data.msg);
+            fetchLeaves();
+            fetchLeaveBalances();
         } catch (err) {
             console.error("Error cancelling leave:", err);
-            setError("Could not cancel leave");
+            if (err.response) {
+                setApiMessage(err.response.data.msg || err.response.data.error || "Could not cancel leave.");
+            } else {
+                setApiMessage("Could not cancel leave due to a network error.");
+            }
         }
-    };
-
-    const getStatusBadgeClass = (status) => {
-        switch (status) {
-            case "Pending":
-                return "status-badge pending";
-            case "Approved":
-                return "status-badge approved";
-            case "Rejected":
-            case "Cancelled":
-                return "status-badge rejected";
-            default:
-                return "status-badge";
-        }
-    };
-
-    const LeaveCard = ({ leave, onCancel, onViewStatus }) => {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0); // Normalize today's date to start of day
-        const leaveEndDate = new Date(leave.end_date);
-        leaveEndDate.setHours(0, 0, 0, 0); // Normalize leave end date to start of day
-
-        // Show cancel button if status is Pending or Approved AND end_date is today or in the future
-        const showCancelButton = (leave.status === "Pending" || leave.status === "Approved") &&
-                                 (leaveEndDate >= today);
-
-        return (
-            <div key={leave.id} className="leave-card">
-                <div className="leave-card-header">
-                    <h4 className="leave-type">{leave.leave_type}</h4>
-                    <span className={getStatusBadgeClass(leave.status)}>{leave.status}</span>
-                </div>
-                <div className="leave-card-body">
-                    <p><strong>From:</strong> {leave.start_date.split("T")[0]}</p>
-                    <p><strong>To:</strong> {leave.end_date.split("T")[0]}</p>
-                    <p><strong>Reason:</strong> {leave.reason}</p>
-                    {leave.number_of_days && <p><strong>Days:</strong> {leave.number_of_days}</p>}
-                </div>
-                <div className="leave-card-actions">
-                    {showCancelButton && (
-                        <button onClick={() => onCancel(leave.id)} className="cancel-btn" type="button">
-                            Cancel
-                        </button>
-                    )}
-                    <button onClick={() => onViewStatus(leave.id)} className="view-status-btn" type="button">
-                        View Status
-                    </button>
-                </div>
-            </div>
-        );
-    };
-
-    const renderLeavesByStatus = (status) =>
-        leaves
-            .filter((leave) => leave.status === status)
-            .map((leave) => (
-                <LeaveCard
-                    key={leave.id}
-                    leave={leave}
-                    onCancel={cancelLeave}
-                    onViewStatus={fetchLeaveStatus}
-                    // showCancelButton prop is now handled internally by LeaveCard based on date and status
-                />
-            ));
-
-    const renderFilteredHistory = () => {
-        let filteredLeaves = leaves;
-        if (historyFilter !== "All") {
-            filteredLeaves = leaves.filter((l) => l.status === historyFilter);
-        }
-        if (filteredLeaves.length === 0) {
-            return <p className="status-text">No {historyFilter.toLowerCase()} leave requests found.</p>;
-        }
-        return filteredLeaves.map((leave) => (
-            <LeaveCard
-                key={leave.id}
-                leave={leave}
-                onViewStatus={fetchLeaveStatus}
-                onCancel={cancelLeave} // Pass onCancel even if not always used by LeaveCard
-                // showCancelButton prop is now handled internally by LeaveCard based on date and status
-            />
-        ));
     };
 
     const closeStatusModal = () => {
@@ -293,7 +346,6 @@ const Leave = () => {
     };
 
     if (loading) return <p>Loading leave data...</p>;
-    if (error) return <p className="error-text">{error}</p>;
 
     return (
         <div className="leave-container">
@@ -330,6 +382,7 @@ const Leave = () => {
                                 value={formData.leave_type_id}
                                 onChange={handleFormChange}
                                 required
+                                className={formErrors.leave_type_id ? 'input-error' : ''}
                             >
                                 <option value="">Select</option>
                                 {leaveTypes.map((type) => {
@@ -344,6 +397,7 @@ const Leave = () => {
                                     );
                                 })}
                             </select>
+                            {formErrors.leave_type_id && <p className="error-message">{formErrors.leave_type_id}</p>}
                         </div>
                         <div className="form-group">
                             <label htmlFor="start_date">Start Date:</label>
@@ -354,7 +408,9 @@ const Leave = () => {
                                 value={formData.start_date}
                                 onChange={handleFormChange}
                                 required
+                                className={formErrors.start_date ? 'input-error' : ''}
                             />
+                            {formErrors.start_date && <p className="error-message">{formErrors.start_date}</p>}
                         </div>
                         <div className="form-group">
                             <label htmlFor="end_date">End Date:</label>
@@ -365,12 +421,67 @@ const Leave = () => {
                                 value={formData.end_date}
                                 onChange={handleFormChange}
                                 required
+                                className={formErrors.end_date ? 'input-error' : ''}
                             />
+                            {formErrors.end_date && <p className="error-message">{formErrors.end_date}</p>}
                         </div>
+
+                        {isSingleDayLeave ? (
+                            <div className="form-group">
+                                <label htmlFor="single_day_half_type">Half-Day Type:</label>
+                                <select
+                                    id="single_day_half_type"
+                                    name="start_half_day_type"
+                                    value={formData.start_half_day_type}
+                                    onChange={handleFormChange}
+                                    required
+                                    className={formErrors.start_half_day_type ? 'input-error' : ''}
+                                >
+                                    <option value={FULL_DAY}>{HALF_DAY_MAP[FULL_DAY]}</option>
+                                    <option value={FIRST_HALF}>{HALF_DAY_MAP[FIRST_HALF]}</option>
+                                    <option value={SECOND_HALF}>{HALF_DAY_MAP[SECOND_HALF]}</option>
+                                </select>
+                                {formErrors.start_half_day_type && <p className="error-message">{formErrors.start_half_day_type}</p>}
+                            </div>
+                        ) : (
+                            <>
+                                <div className="form-group">
+                                    <label htmlFor="start_half_day_type">Start Day Half:</label>
+                                    <select
+                                        id="start_half_day_type"
+                                        name="start_half_day_type"
+                                        value={formData.start_half_day_type}
+                                        onChange={handleFormChange}
+                                        required
+                                        className={formErrors.start_half_day_type ? 'input-error' : ''}
+                                    >
+                                        <option value={FULL_DAY}>{HALF_DAY_MAP[FIRST_HALF]}</option>
+                                        <option value={SECOND_HALF}>{HALF_DAY_MAP[SECOND_HALF]}</option>
+                                    </select>
+                                    {formErrors.start_half_day_type && <p className="error-message">{formErrors.start_half_day_type}</p>}
+                                </div>
+                                <div className="form-group">
+                                    <label htmlFor="end_half_day_type">End Day Half:</label>
+                                    <select
+                                        id="end_half_day_type"
+                                        name="end_half_day_type"
+                                        value={formData.end_half_day_type}
+                                        onChange={handleFormChange}
+                                        required
+                                        className={formErrors.end_half_day_type ? 'input-error' : ''}
+                                    >
+                                        <option value={FIRST_HALF}>{HALF_DAY_MAP[FIRST_HALF]}</option>
+                                        <option value={FULL_DAY}>{HALF_DAY_MAP[SECOND_HALF]}</option>
+                                    </select>
+                                    {formErrors.end_half_day_type && <p className="error-message">{formErrors.end_half_day_type}</p>}
+                                </div>
+                            </>
+                        )}
+
                         {formData.start_date && formData.end_date && (
                             <div className="form-group">
-                                <label>Working Days:</label>
-                                <p>{workingDays}</p>
+                                <label>Estimated Leave Days:</label>
+                                <p>{calculatedLeaveDays}</p>
                             </div>
                         )}
                         <div className="form-group">
@@ -383,8 +494,14 @@ const Leave = () => {
                                 required
                                 rows="3"
                                 placeholder="Provide a reason for your leave"
+                                className={formErrors.reason ? 'input-error' : ''}
                             />
+                            {formErrors.reason && <p className="error-message">{formErrors.reason}</p>}
                         </div>
+
+                        {apiMessage && <p className={`api-message ${apiMessage.includes("Error") || apiMessage.includes("Failed") || apiMessage.includes("Could not") || apiMessage.includes("Please correct") ? "error-text" : "success-text"}`}>{apiMessage}</p>}
+                        {formErrors.general && <p className="error-text">{formErrors.general}</p>}
+
                         <button type="submit" className="yellow-btn submit-btn">
                             Submit Leave
                         </button>
@@ -393,31 +510,22 @@ const Leave = () => {
                     <h3 style={{ color: "#1DA1F2", marginBottom: "1rem" }}>
                         Pending Leave Requests
                     </h3>
-                    {renderLeavesByStatus("Pending")}
+                    {leaves.filter(leave => leave.status === 'Pending').length > 0 ? (
+                        <LeaveHistory
+                            leaves={leaves.filter(leave => leave.status === 'Pending')}
+                            fetchLeaveStatus={fetchLeaveStatus}
+                            cancelLeave={cancelLeave}
+                        />
+                    ) : (
+                        <p className="status-text">No pending leave requests found.</p>
+                    )}
                 </>
             ) : (
-                <>
-                    <div
-                        className="history-filter-buttons"
-                        role="group"
-                        aria-label="Filter Leave History"
-                    >
-                        {["All", "Pending", "Approved", "Rejected", "Cancelled"].map(
-                            (status) => (
-                                <button
-                                    key={status}
-                                    onClick={() => setHistoryFilter(status)}
-                                    className={`history-filter-btn ${historyFilter === status ? "active" : ""}`}
-                                    type="button"
-                                    aria-pressed={historyFilter === status}
-                                >
-                                    {status}
-                                </button>
-                            )
-                        )}
-                    </div>
-                    {renderFilteredHistory()}
-                </>
+                <LeaveHistory
+                    leaves={leaves}
+                    fetchLeaveStatus={fetchLeaveStatus}
+                    cancelLeave={cancelLeave}
+                />
             )}
 
             <LeaveStatusModal

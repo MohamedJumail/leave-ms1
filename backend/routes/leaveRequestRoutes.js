@@ -78,7 +78,7 @@ module.exports = [
   {
     method: 'GET',
     path: '/api/leave/status/{leaveId}',
-    handler: leaveController.getLeaveStatus, // This will be the new controller function
+    handler: leaveController.getLeaveStatus, 
     options: {
       pre: [verifyToken] // Only authenticated users can view their leave status
     }

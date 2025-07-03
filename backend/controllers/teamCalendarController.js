@@ -23,9 +23,6 @@ const getTeamCalendar = async (request, h) => {
       teamMembers = await userModel.getTeamMembersByManager(userId);
     } else { // Regular employee role
       if (!currentUser.manager_id) {
-        // If a regular employee has no manager, they see only their own events,
-        // or an empty calendar if they have no events.
-        // For simplicity, we'll fetch only their data and then filter.
         teamMembers = [{ id: currentUser.id, name: currentUser.name }];
       } else {
         // Get team members for the manager, and ensure the current user is included

@@ -1,7 +1,7 @@
 // app.js
 require("dotenv").config();
 const Hapi = require("@hapi/hapi");
-const teamCalendarRoutes = require("./routes/teamCalendarRoutes");
+
 
 const init = async () => {
   const server = Hapi.server({
@@ -9,8 +9,8 @@ const init = async () => {
     host: "localhost",
     routes: {
       cors: {
-        origin: ['http://localhost:5173'], // Allow your frontend origin
-        credentials: true, 
+        origin: ['http://localhost:5173'],
+        credentials: true,
       },
     },
   });
@@ -32,10 +32,13 @@ const init = async () => {
 
   const leaveRequestRoutes = require('./routes/leaveRequestRoutes');
   server.route(leaveRequestRoutes);
-  
-  const teamCalendarRoutes = require('./routes/teamCalendarRoutes');
+
+  const teamCalendarRoutes = require('./routes/teamCalendarRoutes'); // Corrected duplicate
   server.route(teamCalendarRoutes);
-  
+
+  await server.start();
+  console.log(`Server running at: ${server.info.uri}`);
+
   return server;
 };
 
